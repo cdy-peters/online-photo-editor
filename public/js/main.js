@@ -10,6 +10,8 @@ const readFile = (input) => {
       const ctx = canvas.getContext("2d");
 
       image.onload = () => {
+        canvas.width = image.width;
+        canvas.height = image.height;
         ctx.drawImage(image, 0, 0);
       };
     };
@@ -71,7 +73,7 @@ const sumRows = (offset, pixels, data) => {
   var blueSum = 0;
 
   // Left pixel
-  if (offset - 4 >= 0) {
+  if (offset % (canvas.width * 4) !== 0) {
     redSum += data[offset - 4];
     greenSum += data[offset - 4 + 1];
     blueSum += data[offset - 4 + 2];
@@ -85,7 +87,7 @@ const sumRows = (offset, pixels, data) => {
   pixels++;
 
   // Right pixel
-  if (offset + 4 < canvas.width * 4) {
+  if (offset % (canvas.width * 4) !== (canvas.width - 1) * 4) {
     redSum += data[offset + 4];
     greenSum += data[offset + 4 + 1];
     blueSum += data[offset + 4 + 2];
