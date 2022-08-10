@@ -10,19 +10,38 @@
 <body>
     <h1>Online Photo Editor</h1>
 
-    <input type="file" id="uploadImage" onchange="readFile(this)" />
-    <canvas id="canvas"></canvas>
-    <button onclick="grayscaleFilter()">Grayscale</button>
-    <button onclick="sepiaFilter()">Sepia</button>
-    <button onclick="invertFilter()">Invert</button>
-    <button onclick="blurFilter()">Blur</button>
+    <div>
+        <input type="file" id="uploadImage" onchange="readFile(this)" />
+        <canvas id="canvas"></canvas>
+    </div>
+    <br>
 
-    <label>Brightness<input type="range" id="brightness" min="-255" max="255" value="0"
-            oninput="imageBrightness()"></label>
-    <label>Saturation<input type="range" id="saturation" min="-100" max="100" value="0"
-            oninput="imageSaturation()"></label>
-    <label>Contrast<input type="range" id="contrast" min="-100" max="100" value="0" oninput="imageContrast()"></label>
-    <label>Gamma<input type="range" id="gamma" min="50" max="350" value="200" oninput="imageGamma()"></label>
+    <div class="filters">
+        <h3>Filters</h3>
+        <button onclick="sepiaFilter()">Sepia</button>
+        <button onclick="invertFilter()">Invert</button>
+    </div>
+
+    <div class="light">
+        <h3>Light</h3>
+        <label>Exposure<input type="range" id="exposure" min="-300" max="300" value="0"
+                oninput="imageExposure()"></label>
+        <label>Contrast<input type="range" id="contrast" min="-100" max="100" value="0"
+                oninput="imageContrast()"></label>
+        <label>Gamma<input type="range" id="gamma" min="50" max="350" value="200" oninput="imageGamma()"></label>
+    </div>
+
+    <div class="color">
+        <h3>Color</h3>
+        <button onclick="grayscaleFilter()">Grayscale</button>
+        <label>Saturation<input type="range" id="saturation" min="-100" max="100" value="0"
+                oninput="imageSaturation()"></label>
+    </div>
+
+    <div class="effects">
+        <h3>Effects</h3>
+        <button onclick="blurFilter()">Blur</button>
+    </div>
 </body>
 
 </html>

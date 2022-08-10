@@ -164,19 +164,19 @@ const truncateRGB = (value) => {
   }
 };
 
-const imageBrightness = () => {
+const imageExposure = () => {
   // TODO: Currently resets to the original image.
   const canvas = $("#canvas")[0];
   const ctx = canvas.getContext("2d");
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
   const originalData = originalImage.data;
-  const brightness = parseInt($("#brightness")[0].value);
+  const exposure = parseInt($("#exposure")[0].value) / 100;
 
   for (let i = 0; i < data.length; i += 4) {
-    data[i] = truncateRGB(originalData[i] + brightness);
-    data[i + 1] = truncateRGB(originalData[i + 1] + brightness);
-    data[i + 2] = truncateRGB(originalData[i + 2] + brightness);
+    data[i] = truncateRGB(originalData[i] * Math.pow(2, exposure));
+    data[i + 1] = truncateRGB(originalData[i + 1] * Math.pow(2, exposure));
+    data[i + 2] = truncateRGB(originalData[i + 2] * Math.pow(2, exposure));
   }
   ctx.putImageData(imageData, 0, 0);
 };
