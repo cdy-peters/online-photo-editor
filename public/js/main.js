@@ -202,6 +202,37 @@ const imageSaturation = () => {
   ctx.putImageData(imageData, 0, 0);
 };
 
+const imageTemperature = () => {
+  // TODO: Currently resets to the original image.
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const originalData = originalImage.data;
+  const temperature = parseInt($("#temperature")[0].value);
+
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = truncateRGB(originalData[i] + temperature);
+    data[i + 2] = truncateRGB(originalData[i + 2] - temperature);
+  }
+  ctx.putImageData(imageData, 0, 0);
+};
+
+const imageTint = () => {
+  // TODO: Currently resets to the original image.
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const originalData = originalImage.data;
+  const tint = parseInt($("#tint")[0].value);
+
+  for (let i = 0; i < data.length; i += 4) {
+    data[i + 1] = truncateRGB(originalData[i + 1] + tint);
+  }
+  ctx.putImageData(imageData, 0, 0);
+};
+
 const imageContrast = () => {
   // TODO: Currently resets to the original image.
   const canvas = $("#canvas")[0];
