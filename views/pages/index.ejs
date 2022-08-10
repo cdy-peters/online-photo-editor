@@ -4,7 +4,7 @@
 <head>
     <%- include('../partials/head'); %>
 
-    <title>Document</title>
+        <title>Document</title>
 </head>
 
 <body>
@@ -17,7 +17,9 @@
     <button onclick="invertFilter()">Invert</button>
     <button onclick="blurFilter()">Blur</button>
 
-    <label>Brightness<input type="range" id="brightness" min="-255" max="255" value="0" oninput="imageBrightness()"></label>
+    <label>Brightness<input type="range" id="brightness" min="-255" max="255" value="0"
+            oninput="imageBrightness()"></label>
+    <label>Saturation<input type="range" id="saturation" min="-100" max="100" value="0" oninput="imageSaturation()"></label>
 </body>
 
 </html>

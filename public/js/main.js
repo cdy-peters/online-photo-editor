@@ -155,7 +155,7 @@ const truncateRGB = (value) => {
   } else {
     return value;
   }
-}
+};
 
 const imageBrightness = () => {
   // TODO: Currently resets to the original image.
@@ -172,6 +172,25 @@ const imageBrightness = () => {
     data[i + 2] = truncateRGB(originalData[i + 2] + brightness);
   }
   ctx.putImageData(imageData, 0, 0);
-}
+};
 
+const imageSaturation = () => {
+  // TODO: Currently resets to the original image.
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const originalData = originalImage.data;
+  const saturation = parseInt($("#saturation")[0].value);
 
+  var alpha = (255 + saturation) / (255 - saturation);
+
+  for (let i = 0; i < data.length; i += 4) {
+    var avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+
+    data[i] = truncateRGB(alpha * (originalData[i] - avg) + avg);
+    data[i + 1] = truncateRGB(alpha * (originalData[i + 1] - avg) + avg);
+    data[i + 2] = truncateRGB(alpha * (originalData[i + 2] - avg) + avg);
+  }
+  ctx.putImageData(imageData, 0, 0);
+};
