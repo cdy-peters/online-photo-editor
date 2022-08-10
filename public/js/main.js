@@ -1,4 +1,5 @@
 var originalImage;
+var avgBrightness = 0;
 
 const readFile = (input) => {
   if (input.files && input.files[0]) {
@@ -16,6 +17,12 @@ const readFile = (input) => {
         canvas.height = image.height;
         ctx.drawImage(image, 0, 0);
         originalImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        data = originalImage.data;
+
+        for (let i = 0; i < data.length; i += 4) {
+          avgBrightness += data[i] + data[i + 1] + data[i + 2];
+        }
+        avgBrightness /= canvas.height * canvas.width * 3;
       };
     };
 
@@ -191,6 +198,31 @@ const imageSaturation = () => {
     data[i] = truncateRGB(alpha * (originalData[i] - avg) + avg);
     data[i + 1] = truncateRGB(alpha * (originalData[i + 1] - avg) + avg);
     data[i + 2] = truncateRGB(alpha * (originalData[i + 2] - avg) + avg);
+  }
+  ctx.putImageData(imageData, 0, 0);
+};
+
+const imageContrast = () => {
+  // TODO: Currently resets to the original image.
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const originalData = originalImage.data;
+  const contrast = parseInt($("#contrast")[0].value);
+
+  var alpha = (255 + contrast) / (255 - contrast);
+
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = truncateRGB(
+      alpha * (originalData[i] - avgBrightness) + avgBrightness
+    );
+    data[i + 1] = truncateRGB(
+      alpha * (originalData[i + 1] - avgBrightness) + avgBrightness
+    );
+    data[i + 2] = truncateRGB(
+      alpha * (originalData[i + 2] - avgBrightness) + avgBrightness
+    );
   }
   ctx.putImageData(imageData, 0, 0);
 };
