@@ -1,9 +1,11 @@
+var originalImage;
+
 const readFile = (input) => {
   if (input.files && input.files[0]) {
     var reader = new FileReader();
 
     reader.onload = function (e) {
-      var image = new Image();
+      image = new Image();
       image.src = e.target.result;
 
       const canvas = $("#canvas")[0];
@@ -13,6 +15,7 @@ const readFile = (input) => {
         canvas.width = image.width;
         canvas.height = image.height;
         ctx.drawImage(image, 0, 0);
+        originalImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
       };
     };
 
@@ -20,6 +23,7 @@ const readFile = (input) => {
   }
 };
 
+// TODO: Be able to remove filters
 // Grayscale
 const grayscaleFilter = () => {
   const canvas = $("#canvas")[0];
@@ -142,3 +146,32 @@ const blurFilter = () => {
   }
   ctx.putImageData(imageData, 0, 0);
 };
+
+const truncateRGB = (value) => {
+  if (value > 255) {
+    return 255;
+  } else if (value < 0) {
+    return 0;
+  } else {
+    return value;
+  }
+}
+
+const imageBrightness = () => {
+  // TODO: Currently resets to the original image.
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const originalData = originalImage.data;
+  const brightness = parseInt($("#brightness")[0].value);
+
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = truncateRGB(originalData[i] + brightness);
+    data[i + 1] = truncateRGB(originalData[i + 1] + brightness);
+    data[i + 2] = truncateRGB(originalData[i + 2] + brightness);
+  }
+  ctx.putImageData(imageData, 0, 0);
+}
+
+
