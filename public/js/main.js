@@ -226,3 +226,20 @@ const imageContrast = () => {
   }
   ctx.putImageData(imageData, 0, 0);
 };
+
+const imageGamma = () => {
+  // TODO: Currently resets to the original image.
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const originalData = originalImage.data;
+  const gamma = parseInt($("#gamma")[0].value) / 100;
+
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = Math.pow(originalData[i] / 255, gamma) * 255;
+    data[i + 1] = Math.pow(originalData[i + 1] / 255, gamma) * 255;
+    data[i + 2] = Math.pow(originalData[i + 2] / 255, gamma) * 255;
+  }
+  ctx.putImageData(imageData, 0, 0);
+};
