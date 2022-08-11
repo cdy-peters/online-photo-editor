@@ -113,6 +113,7 @@ const blurFilter = () => {
   const ctx = canvas.getContext("2d");
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
+  const originalData = originalImage.data;
 
   for (let i = 0; i < data.length; i += 4) {
     var pixels = 0;
@@ -123,14 +124,14 @@ const blurFilter = () => {
     // Top row
     if (i > canvas.width * 4) {
       offset = i - canvas.width * 4;
-      row = sumRows(offset, pixels, data);
+      row = sumRows(offset, pixels, originalData);
       redSum += row[0];
       greenSum += row[1];
       blueSum += row[2];
       pixels = row[3];
     }
 
-    row = sumRows(i, pixels, data);
+    row = sumRows(i, pixels, originalData);
     redSum += row[0];
     greenSum += row[1];
     blueSum += row[2];
@@ -140,7 +141,7 @@ const blurFilter = () => {
     if (i < data.length - canvas.width * 4) {
       offset = i + canvas.width * 4;
 
-      row = sumRows(offset, pixels, data);
+      row = sumRows(offset, pixels, originalData);
       redSum += row[0];
       greenSum += row[1];
       blueSum += row[2];
@@ -271,6 +272,103 @@ const imageGamma = () => {
     data[i] = Math.pow(originalData[i] / 255, gamma) * 255;
     data[i + 1] = Math.pow(originalData[i + 1] / 255, gamma) * 255;
     data[i + 2] = Math.pow(originalData[i + 2] / 255, gamma) * 255;
+  }
+  ctx.putImageData(imageData, 0, 0);
+};
+
+// Sharpen
+const sharpenRows = (offset, originalData, factors) => {
+  var redSum = 0;
+  var greenSum = 0;
+  var blueSum = 0;
+
+  // Left pixel
+  if (offset % (canvas.width * 4) !== 0) {
+    redSum += originalData[offset - 4] * factors[0];
+    greenSum += originalData[offset - 4 + 1] * factors[0];
+    blueSum += originalData[offset - 4 + 2] * factors[0];
+  } else {
+    return "edge";
+  }
+
+  // Middle pixel
+  redSum += originalData[offset] * factors[1];
+  greenSum += originalData[offset + 1] * factors[1];
+  blueSum += originalData[offset + 2] * factors[1];
+
+  // Right pixel
+  if (offset % (canvas.width * 4) !== (canvas.width - 1) * 4) {
+    redSum += originalData[offset + 4] * factors[2];
+    greenSum += originalData[offset + 4 + 1] * factors[2];
+    blueSum += originalData[offset + 4 + 2] * factors[2];
+  } else {
+    return "edge";
+  }
+
+  return [redSum, greenSum, blueSum];
+};
+
+const imageSharpen = () => {
+  // TODO: Currently resets to the original image.
+  // ! Doesn't currently work for edge pixels
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const originalData = originalImage.data;
+
+  const kernel = [
+    [0, -1, 0],
+    [-1, 5, -1],
+    [0, -1, 0],
+  ];
+
+  for (let i = 0; i < data.length; i += 4) {
+    var redSum = 0;
+    var greenSum = 0;
+    var blueSum = 0;
+
+    // Top row
+    if (i < canvas.width * 4) {
+      // First row of pixels
+      continue;
+    } else {
+      var offset = i - canvas.width * 4;
+      var row = sharpenRows(offset, originalData, kernel[0]);
+      if (row === "edge") {
+        continue;
+      }
+      redSum += row[0];
+      greenSum += row[1];
+      blueSum += row[2];
+    }
+
+    row = sharpenRows(i, originalData, kernel[1]);
+    if (row === "edge") {
+      continue;
+    }
+    redSum += row[0];
+    greenSum += row[1];
+    blueSum += row[2];
+
+    // Bottom row
+    if (i >= data.length - canvas.width * 4) {
+      // Last row of pixels
+      continue;
+    } else {
+      offset = i + canvas.width * 4;
+      row = sharpenRows(offset, originalData, kernel[2]);
+      if (row === "edge") {
+        continue;
+      }
+      redSum += row[0];
+      greenSum += row[1];
+      blueSum += row[2];
+    }
+
+    data[i] = truncateRGB(redSum);
+    data[i + 1] = truncateRGB(greenSum);
+    data[i + 2] = truncateRGB(blueSum);
   }
   ctx.putImageData(imageData, 0, 0);
 };
