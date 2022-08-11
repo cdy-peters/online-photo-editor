@@ -283,12 +283,15 @@ const sharpenRows = (offset, originalData, factors) => {
   var blueSum = 0;
 
   // Left pixel
-  if (offset % (canvas.width * 4) !== 0) {
+  if (offset % (canvas.width * 4) === 0) {
+    // Left most pixels
+    redSum += originalData[offset] * factors[0];
+    greenSum += originalData[offset + 1] * factors[0];
+    blueSum += originalData[offset + 2] * factors[0];
+  } else {
     redSum += originalData[offset - 4] * factors[0];
     greenSum += originalData[offset - 4 + 1] * factors[0];
     blueSum += originalData[offset - 4 + 2] * factors[0];
-  } else {
-    return "edge";
   }
 
   // Middle pixel
@@ -297,12 +300,15 @@ const sharpenRows = (offset, originalData, factors) => {
   blueSum += originalData[offset + 2] * factors[1];
 
   // Right pixel
-  if (offset % (canvas.width * 4) !== (canvas.width - 1) * 4) {
+  if (offset % (canvas.width * 4) === (canvas.width - 1) * 4) {
+    // Right most pixels
+    redSum += originalData[offset] * factors[2];
+    greenSum += originalData[offset + 1] * factors[2];
+    blueSum += originalData[offset + 2] * factors[2];
+  } else {
     redSum += originalData[offset + 4] * factors[2];
     greenSum += originalData[offset + 4 + 1] * factors[2];
     blueSum += originalData[offset + 4 + 2] * factors[2];
-  } else {
-    return "edge";
   }
 
   return [redSum, greenSum, blueSum];
@@ -310,7 +316,6 @@ const sharpenRows = (offset, originalData, factors) => {
 
 const imageSharpen = () => {
   // TODO: Currently resets to the original image.
-  // ! Doesn't currently work for edge pixels
   const canvas = $("#canvas")[0];
   const ctx = canvas.getContext("2d");
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -334,22 +339,22 @@ const imageSharpen = () => {
     // Top row
     if (i < canvas.width * 4) {
       // First row of pixels
-      continue;
+      var row = sharpenRows(i, originalData, kernel[0]);
+
+      redSum += row[0];
+      greenSum += row[1];
+      blueSum += row[2];
     } else {
       var offset = i - canvas.width * 4;
       var row = sharpenRows(offset, originalData, kernel[0]);
-      if (row === "edge") {
-        continue;
-      }
+
       redSum += row[0];
       greenSum += row[1];
       blueSum += row[2];
     }
 
     row = sharpenRows(i, originalData, kernel[1]);
-    if (row === "edge") {
-      continue;
-    }
+
     redSum += row[0];
     greenSum += row[1];
     blueSum += row[2];
@@ -357,13 +362,15 @@ const imageSharpen = () => {
     // Bottom row
     if (i >= data.length - canvas.width * 4) {
       // Last row of pixels
-      continue;
+      var row = sharpenRows(i, originalData, kernel[0]);
+
+      redSum += row[0];
+      greenSum += row[1];
+      blueSum += row[2];
     } else {
       offset = i + canvas.width * 4;
       row = sharpenRows(offset, originalData, kernel[2]);
-      if (row === "edge") {
-        continue;
-      }
+
       redSum += row[0];
       greenSum += row[1];
       blueSum += row[2];
