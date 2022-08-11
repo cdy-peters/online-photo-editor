@@ -407,3 +407,24 @@ const imageNoiseReduction = () => {
   }
   ctx.putImageData(imageData, 0, 0);
 };
+
+const imageGrain = () => {
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const originalData = originalImage.data;
+  const grain = parseInt($("#grain")[0].value);
+
+  var number;
+
+  for (let i = 0; i < data.length; i += 4) {
+    number = Math.floor(Math.random() * 100);
+    if (number < 50) {
+      data[i + 3] = originalData[i + 3] - grain;
+    } else {
+      data[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(imageData, 0, 0);
+};
