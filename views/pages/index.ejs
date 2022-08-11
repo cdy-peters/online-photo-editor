@@ -20,6 +20,7 @@
         <h3>Filters</h3>
         <button onclick="sepiaFilter()">Sepia</button>
         <button onclick="invertFilter()">Invert</button>
+        <button onclick="imageKernel('emboss')">Emboss</button>
     </div>
 
     <div class="light">
@@ -43,7 +44,8 @@
 
     <div class="detail">
         <h3>Detail</h3>
-        <label>Sharpen<input type="range" id="sharpen" min="0" max="10" value="0" oninput="imageKernel('sharpen')"></label>
+        <label>Sharpen<input type="range" id="sharpen" min="0" max="10" value="0"
+                oninput="imageKernel('sharpen')"></label>
     </div>
 
     <div class="effects">

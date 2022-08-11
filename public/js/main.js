@@ -75,6 +75,13 @@ const imageKernel = (algorithm) => {
       [0.111, 0.111, 0.111],
     ];
   }
+  if (algorithm === "emboss") {
+    kernel = [
+      [-2, -1, 0],
+      [-1, 1, 1],
+      [0, 1, 2],
+    ];
+  }
 
   for (let i = 0; i < data.length; i += 4) {
     var redSum = 0;
