@@ -43,12 +43,12 @@
 
     <div class="detail">
         <h3>Detail</h3>
-        <label>Sharpen<input type="range" id="sharpen" min="0" max="10" value="0" oninput="imageSharpen()"></label>
+        <label>Sharpen<input type="range" id="sharpen" min="0" max="10" value="0" oninput="imageKernel('sharpen')"></label>
     </div>
 
     <div class="effects">
         <h3>Effects</h3>
-        <button onclick="blurFilter()">Blur</button>
+        <button onclick="imageKernel('blur')">Blur</button>
     </div>
 </body>
 
