@@ -317,10 +317,13 @@ const imageSharpen = () => {
   const data = imageData.data;
   const originalData = originalImage.data;
 
+  const sharpen = parseInt($("#sharpen")[0].value) + 1;
+
+  const kernelEdge = -(sharpen - 1) / 4;
   const kernel = [
-    [0, -1, 0],
-    [-1, 5, -1],
-    [0, -1, 0],
+    [0, kernelEdge, 0],
+    [kernelEdge, sharpen, kernelEdge],
+    [0, kernelEdge, 0],
   ];
 
   for (let i = 0; i < data.length; i += 4) {
