@@ -82,6 +82,13 @@ const imageKernel = (algorithm) => {
       [0, 1, 2],
     ];
   }
+  if (algorithm === "outline") {
+    kernel = [
+      [-1, -1, -1],
+      [-1, 8, -1],
+      [-1, -1, -1],
+    ];
+  }
 
   for (let i = 0; i < data.length; i += 4) {
     var redSum = 0;
