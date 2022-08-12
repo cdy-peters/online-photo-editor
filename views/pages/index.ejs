@@ -58,7 +58,7 @@
 
     <div class="effects">
         <h3>Effects</h3>
-        <button onclick="imageKernel('blur')">Blur</button>
+        <label>Blur<input type="range" id="unsharp" min="0" max="100" value="0" oninput="imageUnsharp()"></label>
         <label>Grain<input type="range" id="grain" min="0" max="100" value="0" oninput="imageGrain()"></label>
     </div>
 </body>

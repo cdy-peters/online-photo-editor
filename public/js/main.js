@@ -477,3 +477,23 @@ const imageGrain = () => {
   }
   ctx.putImageData(imageData, 0, 0);
 };
+
+const imageUnsharp = () => {
+  imageKernel("blur");
+
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const originalData = originalImage.data;
+  const unsharp = parseInt($("#unsharp")[0].value) / 100;
+
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = originalData[i] + (data[i] - originalData[i]) * unsharp;
+    data[i + 1] =
+      originalData[i + 1] + (data[i + 1] - originalData[i + 1]) * unsharp;
+    data[i + 2] =
+      originalData[i + 2] + (data[i + 2] - originalData[i + 2]) * unsharp;
+  }
+  ctx.putImageData(imageData, 0, 0);
+};
