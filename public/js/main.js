@@ -2,6 +2,337 @@ var originalImage;
 var imageName;
 var avgBrightness = 0;
 
+const readFile = (input) => {
+  if (input.files && input.files[0]) {
+    imageName = input.files[0].name;
+    imageName = imageName.substring(0, imageName.lastIndexOf("."));
+
+    var reader = new FileReader();
+
+    reader.onload = function (e) {
+      image = new Image();
+      image.src = e.target.result;
+
+      const canvas = $("#canvas")[0];
+      const ctx = canvas.getContext("2d");
+
+      image.onload = () => {
+        canvas.width = image.width;
+        canvas.height = image.height;
+        ctx.drawImage(image, 0, 0);
+        originalImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        data = originalImage.data;
+
+        for (let i = 0; i < data.length; i += 4) {
+          avgBrightness += data[i] + data[i + 1] + data[i + 2];
+        }
+        avgBrightness /= canvas.height * canvas.width * 3;
+      };
+    };
+
+    reader.readAsDataURL(input.files[0]);
+  }
+};
+
+const download = () => {
+  const canvas = $("#canvas")[0];
+  const image = canvas.toDataURL("image/png");
+  const link = document.createElement("a");
+  link.download = imageName + " - Edited.png";
+  link.href = image;
+  link.click();
+};
+
+// * ------------------------------ Adjust ------------------------------ //
+const mirrorImage = () => {
+  // TODO: Currently resets to the original image.
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const originalData = originalImage.data;
+  const newData = new Uint8ClampedArray(data.length);
+  const newImageData = new ImageData(newData, canvas.width, canvas.height);
+
+  for (let i = 0; i < canvas.width; i++) {
+    var offset = i * canvas.width * 4;
+
+    for (let j = 0; j < canvas.width * 4; j += 4) {
+      newData[offset + j] = originalData[offset + canvas.width * 4 - j];
+      newData[offset + j + 1] = originalData[offset + canvas.width * 4 - j + 1];
+      newData[offset + j + 2] = originalData[offset + canvas.width * 4 - j + 2];
+      newData[offset + j + 3] = originalData[offset + canvas.width * 4 - j + 3];
+    }
+  }
+  ctx.putImageData(newImageData, 0, 0);
+};
+
+const reflectImage = () => {
+  // TODO: Currently resets to the original image.
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const originalData = originalImage.data;
+  const newData = new Uint8ClampedArray(data.length);
+  const newImageData = new ImageData(newData, canvas.width, canvas.height);
+
+  for (let i = 0; i < canvas.width * 4; i += 4) {
+    for (let j = 0; j < canvas.height; j++) {
+      var offset = i + j * canvas.width * 4;
+      var reverseOffset = i + (canvas.height - j - 1) * canvas.width * 4;
+
+      newData[offset] = originalData[reverseOffset];
+      newData[offset + 1] = originalData[reverseOffset + 1];
+      newData[offset + 2] = originalData[reverseOffset + 2];
+      newData[offset + 3] = originalData[reverseOffset + 3];
+    }
+  }
+  ctx.putImageData(newImageData, 0, 0);
+};
+
+// * ------------------------------ Filters ------------------------------ //
+// TODO: Be able to remove filters
+const sepiaFilter = () => {
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  for (let i = 0; i < data.length; i += 4) {
+    const red = data[i];
+    const green = data[i + 1];
+    const blue = data[i + 2];
+    data[i] = red * 0.393 + green * 0.769 + blue * 0.189;
+    data[i + 1] = red * 0.349 + green * 0.686 + blue * 0.168;
+    data[i + 2] = red * 0.272 + green * 0.534 + blue * 0.131;
+  }
+  ctx.putImageData(imageData, 0, 0);
+};
+
+const invertFilter = () => {
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = 255 - data[i];
+    data[i + 1] = 255 - data[i + 1];
+    data[i + 2] = 255 - data[i + 2];
+  }
+  ctx.putImageData(imageData, 0, 0);
+};
+
+// * ------------------------------ Light ------------------------------ //
+const imageExposure = () => {
+  // TODO: Currently resets to the original image.
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const originalData = originalImage.data;
+  const exposure = parseInt($("#exposure")[0].value) / 100;
+
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = truncateRGB(originalData[i] * Math.pow(2, exposure));
+    data[i + 1] = truncateRGB(originalData[i + 1] * Math.pow(2, exposure));
+    data[i + 2] = truncateRGB(originalData[i + 2] * Math.pow(2, exposure));
+  }
+  ctx.putImageData(imageData, 0, 0);
+};
+
+const imageContrast = () => {
+  // TODO: Currently resets to the original image.
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const originalData = originalImage.data;
+  const contrast = parseInt($("#contrast")[0].value);
+
+  var alpha = (255 + contrast) / (255 - contrast);
+
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = truncateRGB(
+      alpha * (originalData[i] - avgBrightness) + avgBrightness
+    );
+    data[i + 1] = truncateRGB(
+      alpha * (originalData[i + 1] - avgBrightness) + avgBrightness
+    );
+    data[i + 2] = truncateRGB(
+      alpha * (originalData[i + 2] - avgBrightness) + avgBrightness
+    );
+  }
+  ctx.putImageData(imageData, 0, 0);
+};
+
+const imageGamma = () => {
+  // TODO: Currently resets to the original image.
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const originalData = originalImage.data;
+  const gamma = parseInt($("#gamma")[0].value) / 100;
+
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = Math.pow(originalData[i] / 255, gamma) * 255;
+    data[i + 1] = Math.pow(originalData[i + 1] / 255, gamma) * 255;
+    data[i + 2] = Math.pow(originalData[i + 2] / 255, gamma) * 255;
+  }
+  ctx.putImageData(imageData, 0, 0);
+};
+
+// * ------------------------------ Color ------------------------------ //
+const grayscaleFilter = () => {
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  for (let i = 0; i < data.length; i += 4) {
+    const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+    data[i] = avg;
+    data[i + 1] = avg;
+    data[i + 2] = avg;
+  }
+  ctx.putImageData(imageData, 0, 0);
+};
+
+const imageSaturation = () => {
+  // TODO: Currently resets to the original image.
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const originalData = originalImage.data;
+  const saturation = parseInt($("#saturation")[0].value);
+
+  var alpha = (255 + saturation) / (255 - saturation);
+
+  for (let i = 0; i < data.length; i += 4) {
+    var avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+
+    data[i] = truncateRGB(alpha * (originalData[i] - avg) + avg);
+    data[i + 1] = truncateRGB(alpha * (originalData[i + 1] - avg) + avg);
+    data[i + 2] = truncateRGB(alpha * (originalData[i + 2] - avg) + avg);
+  }
+  ctx.putImageData(imageData, 0, 0);
+};
+
+const imageTemperature = () => {
+  // TODO: Currently resets to the original image.
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const originalData = originalImage.data;
+  const temperature = parseInt($("#temperature")[0].value);
+
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = truncateRGB(originalData[i] + temperature);
+    data[i + 2] = truncateRGB(originalData[i + 2] - temperature);
+  }
+  ctx.putImageData(imageData, 0, 0);
+};
+
+const imageTint = () => {
+  // TODO: Currently resets to the original image.
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const originalData = originalImage.data;
+  const tint = parseInt($("#tint")[0].value);
+
+  for (let i = 0; i < data.length; i += 4) {
+    data[i + 1] = truncateRGB(originalData[i + 1] + tint);
+  }
+  ctx.putImageData(imageData, 0, 0);
+};
+
+// * ------------------------------ Detail ------------------------------ //
+const imageNoiseReduction = () => {
+  // TODO: Currently resets to the original image.
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const originalData = originalImage.data;
+
+  for (let i = 0; i < data.length; i += 4) {
+    redArr = [];
+    greenArr = [];
+    blueArr = [];
+
+    // Top row
+    if (i < canvas.width * 4) {
+      noiseReductionRows(i, originalData);
+    } else {
+      var offset = i - canvas.width * 4;
+      noiseReductionRows(offset, originalData);
+    }
+
+    // Middle row
+    noiseReductionRows(i, originalData);
+
+    // Bottom row
+    if (i > data.length - canvas.width * 4) {
+      noiseReductionRows(i, originalData);
+    } else {
+      var offset = i + canvas.width * 4;
+      noiseReductionRows(offset, originalData);
+    }
+
+    // Get median of each kernel
+    data[i] = kernelMedian(redArr);
+    data[i + 1] = kernelMedian(greenArr);
+    data[i + 2] = kernelMedian(blueArr);
+  }
+  ctx.putImageData(imageData, 0, 0);
+};
+
+// * ------------------------------ Effects ------------------------------ //
+const imageGrain = () => {
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const originalData = originalImage.data;
+  const grain = parseInt($("#grain")[0].value);
+
+  var number;
+
+  for (let i = 0; i < data.length; i += 4) {
+    number = Math.floor(Math.random() * 100);
+    if (number < 50) {
+      data[i + 3] = originalData[i + 3] - grain;
+    } else {
+      data[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(imageData, 0, 0);
+};
+
+const imageUnsharp = () => {
+  imageKernel("blur");
+
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const originalData = originalImage.data;
+  const unsharp = parseInt($("#unsharp")[0].value) / 100;
+
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = originalData[i] + (data[i] - originalData[i]) * unsharp;
+    data[i + 1] =
+      originalData[i + 1] + (data[i + 1] - originalData[i + 1]) * unsharp;
+    data[i + 2] =
+      originalData[i + 2] + (data[i + 2] - originalData[i + 2]) * unsharp;
+  }
+  ctx.putImageData(imageData, 0, 0);
+};
+
+// * ------------------------------ Util functions ------------------------------ //
 const truncateRGB = (value) => {
   if (value > 255) {
     return 255;
@@ -12,6 +343,7 @@ const truncateRGB = (value) => {
   }
 };
 
+// Kernel functions
 const kernelRows = (offset, originalData, factors) => {
   var redSum = 0;
   var greenSum = 0;
@@ -143,255 +475,7 @@ const imageKernel = (algorithm) => {
   ctx.putImageData(imageData, 0, 0);
 };
 
-const readFile = (input) => {
-  if (input.files && input.files[0]) {
-    imageName = input.files[0].name;
-    imageName = imageName.substring(0, imageName.lastIndexOf("."));
-
-    var reader = new FileReader();
-
-    reader.onload = function (e) {
-      image = new Image();
-      image.src = e.target.result;
-
-      const canvas = $("#canvas")[0];
-      const ctx = canvas.getContext("2d");
-
-      image.onload = () => {
-        canvas.width = image.width;
-        canvas.height = image.height;
-        ctx.drawImage(image, 0, 0);
-        originalImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        data = originalImage.data;
-
-        for (let i = 0; i < data.length; i += 4) {
-          avgBrightness += data[i] + data[i + 1] + data[i + 2];
-        }
-        avgBrightness /= canvas.height * canvas.width * 3;
-      };
-    };
-
-    reader.readAsDataURL(input.files[0]);
-  }
-};
-
-const download = () => {
-  const canvas = $("#canvas")[0];
-  const image = canvas.toDataURL("image/png");
-  const link = document.createElement("a");
-  link.download = imageName + " - Edited.png";
-  link.href = image;
-  link.click();
-};
-
-// Mirror
-const mirrorImage = () => {
-  // TODO: Currently resets to the original image.
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
-  const originalData = originalImage.data;
-  const newData = new Uint8ClampedArray(data.length);
-  const newImageData = new ImageData(newData, canvas.width, canvas.height);
-
-  for (let i = 0; i < canvas.width; i++) {
-    var offset = i * canvas.width * 4;
-
-    for (let j = 0; j < canvas.width * 4; j += 4) {
-      newData[offset + j] = originalData[offset + canvas.width * 4 - j];
-      newData[offset + j + 1] = originalData[offset + canvas.width * 4 - j + 1];
-      newData[offset + j + 2] = originalData[offset + canvas.width * 4 - j + 2];
-      newData[offset + j + 3] = originalData[offset + canvas.width * 4 - j + 3];
-    }
-  }
-  ctx.putImageData(newImageData, 0, 0);
-};
-
-// Reflection
-const reflectImage = () => {
-  // TODO: Currently resets to the original image.
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
-  const originalData = originalImage.data;
-  const newData = new Uint8ClampedArray(data.length);
-  const newImageData = new ImageData(newData, canvas.width, canvas.height);
-
-  for (let i = 0; i < canvas.width * 4; i += 4) {
-    for (let j = 0; j < canvas.height; j++) {
-      var offset = i + j * canvas.width * 4;
-      var reverseOffset = i + (canvas.height - j - 1) * canvas.width * 4;
-
-      newData[offset] = originalData[reverseOffset];
-      newData[offset + 1] = originalData[reverseOffset + 1];
-      newData[offset + 2] = originalData[reverseOffset + 2];
-      newData[offset + 3] = originalData[reverseOffset + 3];
-    }
-  }
-  ctx.putImageData(newImageData, 0, 0);
-};
-
-// TODO: Be able to remove filters
-// Grayscale
-const grayscaleFilter = () => {
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
-  for (let i = 0; i < data.length; i += 4) {
-    const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-    data[i] = avg;
-    data[i + 1] = avg;
-    data[i + 2] = avg;
-  }
-  ctx.putImageData(imageData, 0, 0);
-};
-
-// Sepia
-const sepiaFilter = () => {
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
-  for (let i = 0; i < data.length; i += 4) {
-    const red = data[i];
-    const green = data[i + 1];
-    const blue = data[i + 2];
-    data[i] = red * 0.393 + green * 0.769 + blue * 0.189;
-    data[i + 1] = red * 0.349 + green * 0.686 + blue * 0.168;
-    data[i + 2] = red * 0.272 + green * 0.534 + blue * 0.131;
-  }
-  ctx.putImageData(imageData, 0, 0);
-};
-
-// Invert
-const invertFilter = () => {
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
-  for (let i = 0; i < data.length; i += 4) {
-    data[i] = 255 - data[i];
-    data[i + 1] = 255 - data[i + 1];
-    data[i + 2] = 255 - data[i + 2];
-  }
-  ctx.putImageData(imageData, 0, 0);
-};
-
-const imageExposure = () => {
-  // TODO: Currently resets to the original image.
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
-  const originalData = originalImage.data;
-  const exposure = parseInt($("#exposure")[0].value) / 100;
-
-  for (let i = 0; i < data.length; i += 4) {
-    data[i] = truncateRGB(originalData[i] * Math.pow(2, exposure));
-    data[i + 1] = truncateRGB(originalData[i + 1] * Math.pow(2, exposure));
-    data[i + 2] = truncateRGB(originalData[i + 2] * Math.pow(2, exposure));
-  }
-  ctx.putImageData(imageData, 0, 0);
-};
-
-const imageSaturation = () => {
-  // TODO: Currently resets to the original image.
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
-  const originalData = originalImage.data;
-  const saturation = parseInt($("#saturation")[0].value);
-
-  var alpha = (255 + saturation) / (255 - saturation);
-
-  for (let i = 0; i < data.length; i += 4) {
-    var avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-
-    data[i] = truncateRGB(alpha * (originalData[i] - avg) + avg);
-    data[i + 1] = truncateRGB(alpha * (originalData[i + 1] - avg) + avg);
-    data[i + 2] = truncateRGB(alpha * (originalData[i + 2] - avg) + avg);
-  }
-  ctx.putImageData(imageData, 0, 0);
-};
-
-const imageTemperature = () => {
-  // TODO: Currently resets to the original image.
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
-  const originalData = originalImage.data;
-  const temperature = parseInt($("#temperature")[0].value);
-
-  for (let i = 0; i < data.length; i += 4) {
-    data[i] = truncateRGB(originalData[i] + temperature);
-    data[i + 2] = truncateRGB(originalData[i + 2] - temperature);
-  }
-  ctx.putImageData(imageData, 0, 0);
-};
-
-const imageTint = () => {
-  // TODO: Currently resets to the original image.
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
-  const originalData = originalImage.data;
-  const tint = parseInt($("#tint")[0].value);
-
-  for (let i = 0; i < data.length; i += 4) {
-    data[i + 1] = truncateRGB(originalData[i + 1] + tint);
-  }
-  ctx.putImageData(imageData, 0, 0);
-};
-
-const imageContrast = () => {
-  // TODO: Currently resets to the original image.
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
-  const originalData = originalImage.data;
-  const contrast = parseInt($("#contrast")[0].value);
-
-  var alpha = (255 + contrast) / (255 - contrast);
-
-  for (let i = 0; i < data.length; i += 4) {
-    data[i] = truncateRGB(
-      alpha * (originalData[i] - avgBrightness) + avgBrightness
-    );
-    data[i + 1] = truncateRGB(
-      alpha * (originalData[i + 1] - avgBrightness) + avgBrightness
-    );
-    data[i + 2] = truncateRGB(
-      alpha * (originalData[i + 2] - avgBrightness) + avgBrightness
-    );
-  }
-  ctx.putImageData(imageData, 0, 0);
-};
-
-const imageGamma = () => {
-  // TODO: Currently resets to the original image.
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
-  const originalData = originalImage.data;
-  const gamma = parseInt($("#gamma")[0].value) / 100;
-
-  for (let i = 0; i < data.length; i += 4) {
-    data[i] = Math.pow(originalData[i] / 255, gamma) * 255;
-    data[i + 1] = Math.pow(originalData[i + 1] / 255, gamma) * 255;
-    data[i + 2] = Math.pow(originalData[i + 2] / 255, gamma) * 255;
-  }
-  ctx.putImageData(imageData, 0, 0);
-};
-
-// Noise reduction using median filter
+// Noise reduction functions
 const noiseReductionRows = (offset, originalData) => {
   // Left pixel
   if (offset % (canvas.width * 4) === 0) {
@@ -426,87 +510,4 @@ const noiseReductionRows = (offset, originalData) => {
 const kernelMedian = (arr) => {
   arr.sort((a, b) => a - b);
   return arr[4];
-};
-
-const imageNoiseReduction = () => {
-  // TODO: Currently resets to the original image.
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
-  const originalData = originalImage.data;
-
-  for (let i = 0; i < data.length; i += 4) {
-    redArr = [];
-    greenArr = [];
-    blueArr = [];
-
-    // Top row
-    if (i < canvas.width * 4) {
-      // First row of pixels
-      noiseReductionRows(i, originalData);
-    } else {
-      var offset = i - canvas.width * 4;
-      noiseReductionRows(offset, originalData);
-    }
-
-    // Middle row
-    noiseReductionRows(i, originalData);
-
-    // Bottom row
-    if (i > data.length - canvas.width * 4) {
-      // Last row of pixels
-      noiseReductionRows(i, originalData);
-    } else {
-      var offset = i + canvas.width * 4;
-      noiseReductionRows(offset, originalData);
-    }
-
-    // Get median of each kernel
-    data[i] = kernelMedian(redArr);
-    data[i + 1] = kernelMedian(greenArr);
-    data[i + 2] = kernelMedian(blueArr);
-  }
-  ctx.putImageData(imageData, 0, 0);
-};
-
-const imageGrain = () => {
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
-  const originalData = originalImage.data;
-  const grain = parseInt($("#grain")[0].value);
-
-  var number;
-
-  for (let i = 0; i < data.length; i += 4) {
-    number = Math.floor(Math.random() * 100);
-    if (number < 50) {
-      data[i + 3] = originalData[i + 3] - grain;
-    } else {
-      data[i + 3] = 255;
-    }
-  }
-  ctx.putImageData(imageData, 0, 0);
-};
-
-const imageUnsharp = () => {
-  imageKernel("blur");
-
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
-  const originalData = originalImage.data;
-  const unsharp = parseInt($("#unsharp")[0].value) / 100;
-
-  for (let i = 0; i < data.length; i += 4) {
-    data[i] = originalData[i] + (data[i] - originalData[i]) * unsharp;
-    data[i + 1] =
-      originalData[i + 1] + (data[i + 1] - originalData[i + 1]) * unsharp;
-    data[i + 2] =
-      originalData[i + 2] + (data[i + 2] - originalData[i + 2]) * unsharp;
-  }
-  ctx.putImageData(imageData, 0, 0);
 };
