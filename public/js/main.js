@@ -1,4 +1,5 @@
 var originalImage;
+var imageName;
 var avgBrightness = 0;
 
 const truncateRGB = (value) => {
@@ -144,6 +145,9 @@ const imageKernel = (algorithm) => {
 
 const readFile = (input) => {
   if (input.files && input.files[0]) {
+    imageName = input.files[0].name;
+    imageName = imageName.substring(0, imageName.lastIndexOf("."));
+
     var reader = new FileReader();
 
     reader.onload = function (e) {
@@ -169,6 +173,15 @@ const readFile = (input) => {
 
     reader.readAsDataURL(input.files[0]);
   }
+};
+
+const download = () => {
+  const canvas = $("#canvas")[0];
+  const image = canvas.toDataURL("image/png");
+  const link = document.createElement("a");
+  link.download = imageName + " - Edited.png";
+  link.href = image;
+  link.click();
 };
 
 // Mirror
