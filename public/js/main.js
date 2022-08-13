@@ -69,8 +69,10 @@ const readFile = (file) => {
         avgBrightness /= data.length / 3;
       };
     };
-    $("#imageDropzone").css("display", "none");
     reader.readAsDataURL(file);
+
+    $("#imageDropzone").css("display", "none");
+    $("#downloadButton").removeAttr("disabled");
   } else {
     alert("Invalid file type, file must be a PNG or JPEG");
   }

@@ -18,7 +18,7 @@
 <body>
     <h1>Online Photo Editor</h1>
 
-    <button id="downloadButton" onclick="download()">Download</button>
+    <button id="downloadButton" onclick="download()" disabled>Download</button>
     <input type="file" id="selectFile" onchange="selectFile(this)" style="display: none;" />
     <button id="uploadButton" onclick="document.getElementById('selectFile').click()">Upload</button>
 
