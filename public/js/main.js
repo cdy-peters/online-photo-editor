@@ -11,12 +11,13 @@ const download = () => {
   link.click();
 };
 
-// TODO: Verify file types
 // Select file
 const selectFile = (input) => {
   if (input.files.length === 1) {
     const file = input.files[0];
     readFile(file);
+  } else {
+    alert("Multiple files selected. Only one image can be added.");
   }
 };
 
@@ -28,6 +29,8 @@ const dropHandler = (e) => {
   if (e.dataTransfer.items.length === 1) {
     const file = e.dataTransfer.items[0].getAsFile();
     readFile(file);
+  } else {
+    alert("Multiple files inserted. Only one image can be added.");
   }
 };
 
@@ -38,35 +41,39 @@ const dragOverHandler = (e) => {
 
 // Read File
 const readFile = (file) => {
-  imageName = file.name;
-  imageName = imageName.substring(0, imageName.lastIndexOf("."));
+  if (file.type === "image/png" || file.type === "image/jpeg") {
+    imageName = file.name;
+    imageName = imageName.substring(0, imageName.lastIndexOf("."));
 
-  const reader = new FileReader();
+    const reader = new FileReader();
 
-  reader.onload = (e) => {
-    const image = new Image();
-    image.src = e.target.result;
+    reader.onload = (e) => {
+      const image = new Image();
+      image.src = e.target.result;
 
-    const canvas = $("#canvas")[0];
-    const ctx = canvas.getContext("2d");
+      const canvas = $("#canvas")[0];
+      const ctx = canvas.getContext("2d");
 
-    image.onload = () => {
-      canvas.width = image.width;
-      canvas.height = image.height;
+      image.onload = () => {
+        canvas.width = image.width;
+        canvas.height = image.height;
 
-      ctx.drawImage(image, 0, 0);
+        ctx.drawImage(image, 0, 0);
 
-      originalImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        originalImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-      data = originalImage.data;
-      for (let i = 0; i < data.length; i += 4) {
-        avgBrightness += data[i] + data[i + 1] + data[i + 2];
-      }
-      avgBrightness /= data.length / 3;
+        data = originalImage.data;
+        for (let i = 0; i < data.length; i += 4) {
+          avgBrightness += data[i] + data[i + 1] + data[i + 2];
+        }
+        avgBrightness /= data.length / 3;
+      };
     };
-  };
-  $('#imageDropzone').css('display', 'none');
-  reader.readAsDataURL(file);
+    $("#imageDropzone").css("display", "none");
+    reader.readAsDataURL(file);
+  } else {
+    alert("Invalid file type, file must be a PNG or JPEG");
+  }
 };
 
 // * ------------------------------ Adjust ------------------------------ //
