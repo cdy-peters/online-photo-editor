@@ -2,38 +2,6 @@ var originalImage;
 var imageName;
 var avgBrightness = 0;
 
-const readFile = (input) => {
-  if (input.files && input.files[0]) {
-    imageName = input.files[0].name;
-    imageName = imageName.substring(0, imageName.lastIndexOf("."));
-
-    var reader = new FileReader();
-
-    reader.onload = function (e) {
-      image = new Image();
-      image.src = e.target.result;
-
-      const canvas = $("#canvas")[0];
-      const ctx = canvas.getContext("2d");
-
-      image.onload = () => {
-        canvas.width = image.width;
-        canvas.height = image.height;
-        ctx.drawImage(image, 0, 0);
-        originalImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        data = originalImage.data;
-
-        for (let i = 0; i < data.length; i += 4) {
-          avgBrightness += data[i] + data[i + 1] + data[i + 2];
-        }
-        avgBrightness /= canvas.height * canvas.width * 3;
-      };
-    };
-
-    reader.readAsDataURL(input.files[0]);
-  }
-};
-
 const download = () => {
   const canvas = $("#canvas")[0];
   const image = canvas.toDataURL("image/png");
@@ -41,6 +9,64 @@ const download = () => {
   link.download = imageName + " - Edited.png";
   link.href = image;
   link.click();
+};
+
+// TODO: Verify file types
+// Select file
+const selectFile = (input) => {
+  if (input.files.length === 1) {
+    const file = input.files[0];
+    readFile(file);
+  }
+};
+
+// Drag and drop
+const dropHandler = (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  if (e.dataTransfer.items.length === 1) {
+    const file = e.dataTransfer.items[0].getAsFile();
+    readFile(file);
+  }
+};
+
+const dragOverHandler = (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+};
+
+// Read File
+const readFile = (file) => {
+  imageName = file.name;
+  imageName = imageName.substring(0, imageName.lastIndexOf("."));
+
+  const reader = new FileReader();
+
+  reader.onload = (e) => {
+    const image = new Image();
+    image.src = e.target.result;
+
+    const canvas = $("#canvas")[0];
+    const ctx = canvas.getContext("2d");
+
+    image.onload = () => {
+      canvas.width = image.width;
+      canvas.height = image.height;
+
+      ctx.drawImage(image, 0, 0);
+
+      originalImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+      data = originalImage.data;
+      for (let i = 0; i < data.length; i += 4) {
+        avgBrightness += data[i] + data[i + 1] + data[i + 2];
+      }
+      avgBrightness /= data.length / 3;
+    };
+  };
+  $('#imageDropzone').css('display', 'none');
+  reader.readAsDataURL(file);
 };
 
 // * ------------------------------ Adjust ------------------------------ //

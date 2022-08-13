@@ -10,10 +10,14 @@
 <body>
     <h1>Online Photo Editor</h1>
 
-    <button id="download-button" onclick="download()">Download</button>
+    <button id="downloadButton" onclick="download()">Download</button>
+    <input type="file" id="selectFile" onchange="selectFile(this)" style="display: none;" />
+    <button id="uploadButton" onclick="document.getElementById('selectFile').click()">Upload</button>
 
     <div>
-        <input type="file" id="uploadImage" onchange="readFile(this)" />
+        <div id="imageDropzone" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)">
+            <p>Drag and drop an image or select an image via the new image button</p>
+        </div>
         <canvas id="canvas"></canvas>
     </div>
     <br>

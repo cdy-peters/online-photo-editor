@@ -1,13 +1,19 @@
 * {
-    margin: 0;
-    padding: 0;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-    margin: 0 8px;
+  margin: 0 8px;
+}
+
+#imageDropzone {
+  border: 2px solid grey;
+  width: 200px;
+  height: 100px;
 }
 
 canvas {
-    max-height: 50vh;
-    max-width: 50vw;
+  max-height: 50vh;
+  max-width: 50vw;
 }
