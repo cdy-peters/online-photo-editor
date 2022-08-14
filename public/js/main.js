@@ -1,6 +1,5 @@
 var originalImage;
 var imageName;
-var avgBrightness = 0;
 
 const download = () => {
   const canvas = $("#canvas")[0];
@@ -61,12 +60,6 @@ const readFile = (file) => {
         ctx.drawImage(image, 0, 0);
 
         originalImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-        data = originalImage.data;
-        for (let i = 0; i < data.length; i += 4) {
-          avgBrightness += data[i] + data[i + 1] + data[i + 2];
-        }
-        avgBrightness /= data.length / 3;
       };
     };
     reader.readAsDataURL(file);
@@ -239,6 +232,11 @@ const imageContrast = () => {
   const contrast = parseInt($("#contrast")[0].value);
 
   var alpha = (255 + contrast) / (255 - contrast);
+  var avgBrightness = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    avgBrightness += data[i] + data[i + 1] + data[i + 2];
+  }
+  avgBrightness /= data.length / 3;
 
   for (let i = 0; i < data.length; i += 4) {
     data[i] = truncateRGB(
