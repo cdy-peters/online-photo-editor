@@ -16,13 +16,15 @@
 </head>
 
 <body>
-    <h1>Online Photo Editor</h1>
+    <h1 id="title">Online Photo Editor</h1>
 
-    <button id="downloadButton" onclick="download()" disabled>Download</button>
-    <input type="file" id="selectFile" onchange="selectFile(this)" style="display: none;" />
-    <button id="uploadButton" onclick="document.getElementById('selectFile').click()">Upload</button>
+    <div id="imageActions">
+        <button id="downloadButton" onclick="download()" disabled>Download</button>
+        <input type="file" id="selectFile" onchange="selectFile(this)" style="display: none;" />
+        <button id="uploadButton" onclick="document.getElementById('selectFile').click()">Upload</button>
+    </div>
 
-    <div>
+    <div id="canvasContainer">
         <div id="imageDropzone" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)">
             <p>Drag and drop an image or select an image via the new image button</p>
         </div>
