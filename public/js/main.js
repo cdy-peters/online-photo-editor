@@ -80,12 +80,10 @@ const readFile = (file) => {
 
 // * ------------------------------ Adjust ------------------------------ //
 const mirrorImage = () => {
-  // TODO: Currently resets to the original image.
   const canvas = $("#canvas")[0];
   const ctx = canvas.getContext("2d");
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
-  const originalData = originalImage.data;
   const newData = new Uint8ClampedArray(data.length);
   const newImageData = new ImageData(newData, canvas.width, canvas.height);
 
@@ -93,22 +91,20 @@ const mirrorImage = () => {
     var offset = i * canvas.width * 4;
 
     for (let j = 0; j < canvas.width * 4; j += 4) {
-      newData[offset + j] = originalData[offset + canvas.width * 4 - j];
-      newData[offset + j + 1] = originalData[offset + canvas.width * 4 - j + 1];
-      newData[offset + j + 2] = originalData[offset + canvas.width * 4 - j + 2];
-      newData[offset + j + 3] = originalData[offset + canvas.width * 4 - j + 3];
+      newData[offset + j] = data[offset + canvas.width * 4 - j];
+      newData[offset + j + 1] = data[offset + canvas.width * 4 - j + 1];
+      newData[offset + j + 2] = data[offset + canvas.width * 4 - j + 2];
+      newData[offset + j + 3] = data[offset + canvas.width * 4 - j + 3];
     }
   }
   ctx.putImageData(newImageData, 0, 0);
 };
 
 const reflectImage = () => {
-  // TODO: Currently resets to the original image.
   const canvas = $("#canvas")[0];
   const ctx = canvas.getContext("2d");
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
-  const originalData = originalImage.data;
   const newData = new Uint8ClampedArray(data.length);
   const newImageData = new ImageData(newData, canvas.width, canvas.height);
 
@@ -117,10 +113,10 @@ const reflectImage = () => {
       var offset = i + j * canvas.width * 4;
       var reverseOffset = i + (canvas.height - j - 1) * canvas.width * 4;
 
-      newData[offset] = originalData[reverseOffset];
-      newData[offset + 1] = originalData[reverseOffset + 1];
-      newData[offset + 2] = originalData[reverseOffset + 2];
-      newData[offset + 3] = originalData[reverseOffset + 3];
+      newData[offset] = data[reverseOffset];
+      newData[offset + 1] = data[reverseOffset + 1];
+      newData[offset + 2] = data[reverseOffset + 2];
+      newData[offset + 3] = data[reverseOffset + 3];
     }
   }
   ctx.putImageData(newImageData, 0, 0);
