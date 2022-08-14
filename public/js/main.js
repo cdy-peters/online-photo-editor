@@ -595,6 +595,15 @@ const imageUnsharp = () => {
 };
 
 // * ------------------------------ Util functions ------------------------------ //
+var prevTab = "adjust";
+const openTab = (e, tab) => {
+  $(`#${prevTab}`).hide();
+  $(`#${prevTab}-tab`).removeClass("btn-active");
+  $(`#${tab}`).show();
+  $(`#${tab}-tab`).addClass("btn-active");
+  prevTab = tab;
+}
+
 const truncateRGB = (value) => {
   if (value > 255) {
     return 255;
