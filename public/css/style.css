@@ -3,6 +3,10 @@
   padding: 0;
 }
 
+html {
+  font-family: Helvetica, sans-serif, Arial;
+}
+
 body {
   margin: 0 8px;
 }
@@ -20,7 +24,7 @@ body {
 }
 
 #imageActions button {
-  background-color: #4caf50;
+  background-color: #373737;
   border: none;
   color: white;
   padding: 10px 20px;
@@ -30,6 +34,12 @@ body {
   font-size: 16px;
   margin: 4px 2px;
   cursor: pointer;
+  border-radius: 3px;
+}
+
+#imageActions #downloadButton:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 
 #canvasContainer {
@@ -67,6 +77,7 @@ canvas {
   display: flex;
   justify-content: space-evenly;
   background-color: #373737;
+  border-radius: 6px 6px 0 0;
 }
 
 #tab button {
@@ -85,18 +96,46 @@ canvas {
 #tab button:hover {
   background-color: #515151;
   color: white;
+  border-radius: inherit;
 }
 
 .btn-active {
   background-color: #515151 !important;
+  border-radius: inherit;
 }
 
 #editOptions {
   width: 50vw;
   margin: 0 auto;
-  background-color: #515151;
 }
 
-#tabcontent {
+.tabcontent {
   background-color: #515151;
+  padding: 8px;
+  color: white;
+}
+
+.tabcontent svg {
+  margin-right: 0.5em;
+}
+
+.tabcontent button {
+  background-color: #7b7b7b;
+  border: none;
+  color: white;
+  padding: 10px 15px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 2px 2px;
+  cursor: pointer;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.tabcontent button:hover {
+  background-color: #8e8e8e;
+  color: white;
 }

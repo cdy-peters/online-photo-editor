@@ -602,7 +602,7 @@ const openTab = (e, tab) => {
   $(`#${tab}`).show();
   $(`#${tab}-tab`).addClass("btn-active");
   prevTab = tab;
-}
+};
 
 const truncateRGB = (value) => {
   if (value > 255) {
