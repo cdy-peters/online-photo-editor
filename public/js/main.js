@@ -126,6 +126,64 @@ const reflectImage = () => {
   ctx.putImageData(newImageData, 0, 0);
 };
 
+const rotateClockwise = () => {
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+
+  const newWidth = canvas.height;
+  const newHeight = canvas.width;
+
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const newData = new Uint8ClampedArray(data.length);
+  const newImageData = new ImageData(newData, canvas.height, canvas.width);
+
+  for (let i = 0; i < canvas.width; i++) {
+    for (let j = 0; j < canvas.height; j++) {
+      newData[(i + 1) * newWidth * 4 - j * 4 - 4] =
+        data[j * canvas.width * 4 + i * 4 + 0];
+      newData[(i + 1) * newWidth * 4 - j * 4 - 3] =
+        data[j * canvas.width * 4 + i * 4 + 1];
+      newData[(i + 1) * newWidth * 4 - j * 4 - 2] =
+        data[j * canvas.width * 4 + i * 4 + 2];
+      newData[(i + 1) * newWidth * 4 - j * 4 - 1] =
+        data[j * canvas.width * 4 + i * 4 + 3];
+    }
+  }
+  canvas.width = newWidth;
+  canvas.height = newHeight;
+  ctx.putImageData(newImageData, 0, 0);
+};
+
+const rotateCounterClockwise = () => {
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+
+  const newWidth = canvas.height;
+  const newHeight = canvas.width;
+
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const newData = new Uint8ClampedArray(data.length);
+  const newImageData = new ImageData(newData, canvas.height, canvas.width);
+
+  for (let i = 0; i < canvas.width; i++) {
+    for (let j = 0; j < canvas.height; j++) {
+      newData[i * newWidth * 4 + j * 4 + 0] =
+        data[(j + 1) * canvas.width * 4 - i * 4 - 4];
+      newData[i * newWidth * 4 + j * 4 + 1] =
+        data[(j + 1) * canvas.width * 4 - i * 4 - 3];
+      newData[i * newWidth * 4 + j * 4 + 2] =
+        data[(j + 1) * canvas.width * 4 - i * 4 - 2];
+      newData[i * newWidth * 4 + j * 4 + 3] =
+        data[(j + 1) * canvas.width * 4 - i * 4 - 1];
+    }
+  }
+  canvas.width = newWidth;
+  canvas.height = newHeight;
+  ctx.putImageData(newImageData, 0, 0);
+};
+
 // * ------------------------------ Filters ------------------------------ //
 // TODO: Be able to remove filters
 const sepiaFilter = () => {
