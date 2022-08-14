@@ -102,6 +102,17 @@ const readFile = (file) => {
 
 const updateEdits = (key) => {
   switch (key) {
+    // Filters
+    case "grayscale":
+      edits.filters.grayscale = !edits.filters.grayscale;
+      break;
+    case "sepia":
+      edits.filters.sepia = !edits.filters.sepia;
+      break;
+    case "invert":
+      edits.filters.invert = !edits.filters.invert;
+      break;
+
     // Light
     case "exposure":
       edits.light.exposure = parseInt($("#exposure")[0].value) / 100;
@@ -131,6 +142,17 @@ const updateCanvas = () => {
   const canvas = $("#canvas")[0];
   const ctx = canvas.getContext("2d");
   ctx.putImageData(originalImage, 0, 0);
+
+  // Filters
+  if (edits.filters.grayscale) {
+    grayscaleFilter();
+  }
+  if (edits.filters.sepia) {
+    sepiaFilter();
+  }
+  if (edits.filters.invert) {
+    invertFilter();
+  }
 
   // Light
   if (edits.light.exposure !== 0) {
