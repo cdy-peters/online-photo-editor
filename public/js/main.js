@@ -93,8 +93,21 @@ const readFile = (file) => {
     };
     reader.readAsDataURL(file);
 
-    $("#imageDropzone").css("display", "none");
-    $("#downloadButton").removeAttr("disabled");
+    if ($("#editOptions").attr("hidden")) {
+      $("#imageDropzone").css("display", "none");
+      $("#downloadButton").removeAttr("disabled");
+      $("#editOptions").removeAttr("hidden");
+    } else {
+      $("#exposure").val(0);
+      $("#contrast").val(0);
+      $("#gamma").val(200);
+      $("#saturation").val(0);
+      $("#temperature").val(0);
+      $("#tint").val(0);
+      $("#sharpen").val(0);
+      $("#unsharp").val(0);
+      $("#grain").val(0);
+    }
   } else {
     alert("Invalid file type, file must be a PNG or JPEG");
   }

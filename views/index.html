@@ -30,53 +30,56 @@
     </div>
     <br>
 
-    <div class="adjust">
-        <h3>Adjust image</h3>
-        <button onclick="mirrorImage()">Mirror</button>
-        <button onclick="reflectImage()">Reflect</button>
-        <button onclick="rotateClockwise()">Rotate 90 degrees clockwise</button>
-        <button onclick="rotateCounterClockwise()">Rotate 90 degrees counter-clockwise</button>
-    </div>
+    <div id="editOptions" hidden>
+        <div class="adjust">
+            <h3>Adjust image</h3>
+            <button onclick="mirrorImage()">Mirror</button>
+            <button onclick="reflectImage()">Reflect</button>
+            <button onclick="rotateClockwise()">Rotate 90 degrees clockwise</button>
+            <button onclick="rotateCounterClockwise()">Rotate 90 degrees counter-clockwise</button>
+        </div>
 
-    <div class="filters">
-        <h3>Filters</h3>
-        <button onclick="updateEdits('grayscale')">Grayscale</button>
-        <button onclick="updateEdits('sepia')">Sepia</button>
-        <button onclick="updateEdits('invert')">Invert</button>
-        <button onclick="imageKernel('emboss')">Emboss</button>
-        <button onclick="imageKernel('outline')">Outline</button>
-    </div>
+        <div class="filters">
+            <h3>Filters</h3>
+            <button onclick="updateEdits('grayscale')">Grayscale</button>
+            <button onclick="updateEdits('sepia')">Sepia</button>
+            <button onclick="updateEdits('invert')">Invert</button>
+            <button onclick="imageKernel('emboss')">Emboss</button>
+            <button onclick="imageKernel('outline')">Outline</button>
+        </div>
 
-    <div class="light">
-        <h3>Light</h3>
-        <label>Exposure<input type="range" id="exposure" min="-300" max="300" value="0"
-                oninput="updateEdits('exposure')"></label>
-        <label>Contrast<input type="range" id="contrast" min="-100" max="100" value="0"
-                oninput="updateEdits('contrast')"></label>
-        <label>Gamma<input type="range" id="gamma" min="50" max="350" value="200"
-                oninput="updateEdits('gamma')"></label>
-    </div>
+        <div class="light">
+            <h3>Light</h3>
+            <label>Exposure<input type="range" id="exposure" min="-300" max="300" value="0"
+                    oninput="updateEdits('exposure')"></label>
+            <label>Contrast<input type="range" id="contrast" min="-100" max="100" value="0"
+                    oninput="updateEdits('contrast')"></label>
+            <label>Gamma<input type="range" id="gamma" min="50" max="350" value="200"
+                    oninput="updateEdits('gamma')"></label>
+        </div>
 
-    <div class="color">
-        <h3>Color</h3>
-        <label>Saturation<input type="range" id="saturation" min="-100" max="100" value="0"
-                oninput="updateEdits('saturation')"></label>
-        <label>Temperature<input type="range" id="temperature" min="-100" max="100" value="0"
-                oninput="updateEdits('temperature')"></label>
-        <label>Tint<input type="range" id="tint" min="-100" max="100" value="0" oninput="updateEdits('tint')"></label>
-    </div>
+        <div class="color">
+            <h3>Color</h3>
+            <label>Saturation<input type="range" id="saturation" min="-100" max="100" value="0"
+                    oninput="updateEdits('saturation')"></label>
+            <label>Temperature<input type="range" id="temperature" min="-100" max="100" value="0"
+                    oninput="updateEdits('temperature')"></label>
+            <label>Tint<input type="range" id="tint" min="-100" max="100" value="0"
+                    oninput="updateEdits('tint')"></label>
+        </div>
 
-    <div class="detail">
-        <h3>Detail</h3>
-        <label>Sharpen<input type="range" id="sharpen" min="0" max="10" value="0"
-                oninput="imageKernel('sharpen')"></label>
-        <button onclick="imageNoiseReduction()">Noise Reduction</button>
-    </div>
+        <div class="detail">
+            <h3>Detail</h3>
+            <label>Sharpen<input type="range" id="sharpen" min="0" max="10" value="0"
+                    oninput="imageKernel('sharpen')"></label>
+            <button onclick="imageNoiseReduction()">Noise Reduction</button>
+        </div>
 
-    <div class="effects">
-        <h3>Effects</h3>
-        <label>Blur<input type="range" id="unsharp" min="0" max="100" value="0" oninput="imageUnsharp()"></label>
-        <label>Grain<input type="range" id="grain" min="0" max="100" value="0" oninput="imageGrain()"></label>
+        <div class="effects">
+            <h3>Effects</h3>
+            <label>Blur<input type="range" id="unsharp" min="0" max="100" value="0" oninput="imageUnsharp()"></label>
+            <label>Grain<input type="range" id="grain" min="0" max="100" value="0" oninput="imageGrain()"></label>
+        </div>
     </div>
 </body>
 
