@@ -159,8 +159,10 @@ const updateCanvas = () => {
 const mirrorImage = () => {
   const canvas = $("#canvas")[0];
   const ctx = canvas.getContext("2d");
+
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
+
   const newData = new Uint8ClampedArray(data.length);
   const newImageData = new ImageData(newData, canvas.width, canvas.height);
 
@@ -174,14 +176,18 @@ const mirrorImage = () => {
       newData[offset + j + 3] = data[offset + canvas.width * 4 - j + 3];
     }
   }
+
+  originalImage = newImageData;
   ctx.putImageData(newImageData, 0, 0);
 };
 
 const reflectImage = () => {
   const canvas = $("#canvas")[0];
   const ctx = canvas.getContext("2d");
+
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
+
   const newData = new Uint8ClampedArray(data.length);
   const newImageData = new ImageData(newData, canvas.width, canvas.height);
 
@@ -196,6 +202,8 @@ const reflectImage = () => {
       newData[offset + 3] = data[reverseOffset + 3];
     }
   }
+
+  originalImage = newImageData;
   ctx.putImageData(newImageData, 0, 0);
 };
 
@@ -223,8 +231,10 @@ const rotateClockwise = () => {
         data[j * canvas.width * 4 + i * 4 + 3];
     }
   }
+
   canvas.width = newWidth;
   canvas.height = newHeight;
+  originalImage = newImageData;
   ctx.putImageData(newImageData, 0, 0);
 };
 
@@ -252,8 +262,10 @@ const rotateCounterClockwise = () => {
         data[(j + 1) * canvas.width * 4 - i * 4 - 1];
     }
   }
+
   canvas.width = newWidth;
   canvas.height = newHeight;
+  originalImage = newImageData;
   ctx.putImageData(newImageData, 0, 0);
 };
 
