@@ -1,5 +1,6 @@
 var originalImage;
 var imageName;
+var edits;
 
 const download = () => {
   const canvas = $("#canvas")[0];
@@ -41,6 +42,34 @@ const dragOverHandler = (e) => {
 // Read File
 const readFile = (file) => {
   if (file.type === "image/png" || file.type === "image/jpeg") {
+    edits = {
+      filters: {
+        grayscale: false,
+        sepia: false,
+        invert: false,
+        emboss: false,
+        outline: false,
+      },
+      light: {
+        exposure: 0,
+        contrast: 0,
+        gamma: 200,
+      },
+      color: {
+        saturation: 0,
+        temperature: 0,
+        tint: 0,
+      },
+      detail: {
+        sharpen: 0,
+        noiseReduction: false,
+      },
+      effects: {
+        blur: 0,
+        grain: 0,
+      },
+    };
+
     imageName = file.name;
     imageName = imageName.substring(0, imageName.lastIndexOf("."));
 
@@ -68,6 +97,61 @@ const readFile = (file) => {
     $("#downloadButton").removeAttr("disabled");
   } else {
     alert("Invalid file type, file must be a PNG or JPEG");
+  }
+};
+
+const updateEdits = (key) => {
+  switch (key) {
+    // Light
+    case "exposure":
+      edits.light.exposure = parseInt($("#exposure")[0].value) / 100;
+      break;
+    case "contrast":
+      edits.light.contrast = parseInt($("#contrast")[0].value);
+      break;
+    case "gamma":
+      edits.light.gamma = parseInt($("#gamma")[0].value) / 100;
+      break;
+
+    // Color
+    case "saturation":
+      edits.color.saturation = parseInt($("#saturation")[0].value);
+      break;
+    case "temperature":
+      edits.color.temperature = parseInt($("#temperature")[0].value);
+      break;
+    case "tint":
+      edits.color.tint = parseInt($("#tint")[0].value);
+      break;
+  }
+  updateCanvas();
+};
+
+const updateCanvas = () => {
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+  ctx.putImageData(originalImage, 0, 0);
+
+  // Light
+  if (edits.light.exposure !== 0) {
+    imageExposure();
+  }
+  if (edits.light.contrast !== 0) {
+    imageContrast();
+  }
+  if (edits.light.gamma !== 200) {
+    imageGamma();
+  }
+
+  // Color
+  if (edits.color.saturation !== 0) {
+    imageSaturation();
+  }
+  if (edits.color.temperature !== 0) {
+    imageTemperature();
+  }
+  if (edits.color.tint !== 0) {
+    imageTint();
   }
 };
 
@@ -175,11 +259,30 @@ const rotateCounterClockwise = () => {
 
 // * ------------------------------ Filters ------------------------------ //
 // TODO: Be able to remove filters
+const grayscaleFilter = () => {
+  const canvas = $("#canvas")[0];
+  const ctx = canvas.getContext("2d");
+
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+
+  for (let i = 0; i < data.length; i += 4) {
+    const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+    data[i] = avg;
+    data[i + 1] = avg;
+    data[i + 2] = avg;
+  }
+
+  ctx.putImageData(imageData, 0, 0);
+};
+
 const sepiaFilter = () => {
   const canvas = $("#canvas")[0];
   const ctx = canvas.getContext("2d");
+
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
+
   for (let i = 0; i < data.length; i += 4) {
     const red = data[i];
     const green = data[i + 1];
@@ -206,30 +309,38 @@ const invertFilter = () => {
 
 // * ------------------------------ Light ------------------------------ //
 const imageExposure = () => {
-  // TODO: Currently resets to the original image.
   const canvas = $("#canvas")[0];
   const ctx = canvas.getContext("2d");
+
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
-  const originalData = originalImage.data;
-  const exposure = parseInt($("#exposure")[0].value) / 100;
+
+  const newData = new Uint8ClampedArray(data.length);
+  const newImageData = new ImageData(newData, canvas.width, canvas.height);
+
+  const exposure = edits.light.exposure;
 
   for (let i = 0; i < data.length; i += 4) {
-    data[i] = truncateRGB(originalData[i] * Math.pow(2, exposure));
-    data[i + 1] = truncateRGB(originalData[i + 1] * Math.pow(2, exposure));
-    data[i + 2] = truncateRGB(originalData[i + 2] * Math.pow(2, exposure));
+    newData[i] = truncateRGB(data[i] * Math.pow(2, exposure));
+    newData[i + 1] = truncateRGB(data[i + 1] * Math.pow(2, exposure));
+    newData[i + 2] = truncateRGB(data[i + 2] * Math.pow(2, exposure));
+    newData[i + 3] = data[i + 3];
   }
-  ctx.putImageData(imageData, 0, 0);
+
+  ctx.putImageData(newImageData, 0, 0);
 };
 
 const imageContrast = () => {
-  // TODO: Currently resets to the original image.
   const canvas = $("#canvas")[0];
   const ctx = canvas.getContext("2d");
+
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
-  const originalData = originalImage.data;
-  const contrast = parseInt($("#contrast")[0].value);
+
+  const newData = new Uint8ClampedArray(data.length);
+  const newImageData = new ImageData(newData, canvas.width, canvas.height);
+
+  const contrast = edits.light.contrast;
 
   var alpha = (255 + contrast) / (255 - contrast);
   var avgBrightness = 0;
@@ -239,101 +350,110 @@ const imageContrast = () => {
   avgBrightness /= data.length / 3;
 
   for (let i = 0; i < data.length; i += 4) {
-    data[i] = truncateRGB(
-      alpha * (originalData[i] - avgBrightness) + avgBrightness
+    newData[i] = truncateRGB(alpha * (data[i] - avgBrightness) + avgBrightness);
+    newData[i + 1] = truncateRGB(
+      alpha * (data[i + 1] - avgBrightness) + avgBrightness
     );
-    data[i + 1] = truncateRGB(
-      alpha * (originalData[i + 1] - avgBrightness) + avgBrightness
+    newData[i + 2] = truncateRGB(
+      alpha * (data[i + 2] - avgBrightness) + avgBrightness
     );
-    data[i + 2] = truncateRGB(
-      alpha * (originalData[i + 2] - avgBrightness) + avgBrightness
-    );
+    newData[i + 3] = data[i + 3];
   }
-  ctx.putImageData(imageData, 0, 0);
+
+  ctx.putImageData(newImageData, 0, 0);
 };
 
 const imageGamma = () => {
-  // TODO: Currently resets to the original image.
   const canvas = $("#canvas")[0];
   const ctx = canvas.getContext("2d");
+
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
-  const originalData = originalImage.data;
-  const gamma = parseInt($("#gamma")[0].value) / 100;
+
+  const newData = new Uint8ClampedArray(data.length);
+  const newImageData = new ImageData(newData, canvas.width, canvas.height);
+
+  const gamma = edits.light.gamma;
 
   for (let i = 0; i < data.length; i += 4) {
-    data[i] = Math.pow(originalData[i] / 255, gamma) * 255;
-    data[i + 1] = Math.pow(originalData[i + 1] / 255, gamma) * 255;
-    data[i + 2] = Math.pow(originalData[i + 2] / 255, gamma) * 255;
+    newData[i] = Math.pow(data[i] / 255, gamma) * 255;
+    newData[i + 1] = Math.pow(data[i + 1] / 255, gamma) * 255;
+    newData[i + 2] = Math.pow(data[i + 2] / 255, gamma) * 255;
+    newData[i + 3] = data[i + 3];
   }
-  ctx.putImageData(imageData, 0, 0);
+
+  ctx.putImageData(newImageData, 0, 0);
 };
 
 // * ------------------------------ Color ------------------------------ //
-const grayscaleFilter = () => {
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
-  for (let i = 0; i < data.length; i += 4) {
-    const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-    data[i] = avg;
-    data[i + 1] = avg;
-    data[i + 2] = avg;
-  }
-  ctx.putImageData(imageData, 0, 0);
-};
-
 const imageSaturation = () => {
-  // TODO: Currently resets to the original image.
   const canvas = $("#canvas")[0];
   const ctx = canvas.getContext("2d");
+
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
-  const originalData = originalImage.data;
-  const saturation = parseInt($("#saturation")[0].value);
+
+  const newData = new Uint8ClampedArray(data.length);
+  const newImageData = new ImageData(newData, canvas.width, canvas.height);
+
+  const saturation = edits.color.saturation;
 
   var alpha = (255 + saturation) / (255 - saturation);
 
   for (let i = 0; i < data.length; i += 4) {
     var avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
 
-    data[i] = truncateRGB(alpha * (originalData[i] - avg) + avg);
-    data[i + 1] = truncateRGB(alpha * (originalData[i + 1] - avg) + avg);
-    data[i + 2] = truncateRGB(alpha * (originalData[i + 2] - avg) + avg);
+    newData[i] = truncateRGB(alpha * (data[i] - avg) + avg);
+    newData[i + 1] = truncateRGB(alpha * (data[i + 1] - avg) + avg);
+    newData[i + 2] = truncateRGB(alpha * (data[i + 2] - avg) + avg);
+    newData[i + 3] = data[i + 3];
   }
-  ctx.putImageData(imageData, 0, 0);
+
+  ctx.putImageData(newImageData, 0, 0);
 };
 
 const imageTemperature = () => {
-  // TODO: Currently resets to the original image.
   const canvas = $("#canvas")[0];
   const ctx = canvas.getContext("2d");
+
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
-  const originalData = originalImage.data;
-  const temperature = parseInt($("#temperature")[0].value);
+
+  const newData = new Uint8ClampedArray(data.length);
+  const newImageData = new ImageData(newData, canvas.width, canvas.height);
+
+  const temperature = edits.color.temperature;
 
   for (let i = 0; i < data.length; i += 4) {
-    data[i] = truncateRGB(originalData[i] + temperature);
-    data[i + 2] = truncateRGB(originalData[i + 2] - temperature);
+    newData[i] = truncateRGB(data[i] + temperature);
+    newData[i + 1] = data[i + 1];
+    newData[i + 2] = truncateRGB(data[i + 2] - temperature);
+    newData[i + 3] = data[i + 3];
   }
-  ctx.putImageData(imageData, 0, 0);
+
+  ctx.putImageData(newImageData, 0, 0);
 };
 
 const imageTint = () => {
-  // TODO: Currently resets to the original image.
   const canvas = $("#canvas")[0];
   const ctx = canvas.getContext("2d");
+
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
-  const originalData = originalImage.data;
-  const tint = parseInt($("#tint")[0].value);
+
+  const newData = new Uint8ClampedArray(data.length);
+  const newImageData = new ImageData(newData, canvas.width, canvas.height);
+
+  const tint = edits.color.tint;
 
   for (let i = 0; i < data.length; i += 4) {
-    data[i + 1] = truncateRGB(originalData[i + 1] + tint);
+    newData[i] = data[i];
+    newData[i + 1] = truncateRGB(data[i + 1] + tint);
+    newData[i + 2] = data[i + 2];
+    newData[i + 3] = data[i + 3];
   }
-  ctx.putImageData(imageData, 0, 0);
+
+  ctx.putImageData(newImageData, 0, 0);
 };
 
 // * ------------------------------ Detail ------------------------------ //
@@ -341,6 +461,7 @@ const imageNoiseReduction = () => {
   // TODO: Currently resets to the original image.
   const canvas = $("#canvas")[0];
   const ctx = canvas.getContext("2d");
+
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
   const originalData = originalImage.data;
@@ -374,6 +495,7 @@ const imageNoiseReduction = () => {
     data[i + 1] = kernelMedian(greenArr);
     data[i + 2] = kernelMedian(blueArr);
   }
+
   ctx.putImageData(imageData, 0, 0);
 };
 
@@ -381,13 +503,14 @@ const imageNoiseReduction = () => {
 const imageGrain = () => {
   const canvas = $("#canvas")[0];
   const ctx = canvas.getContext("2d");
+
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
   const originalData = originalImage.data;
+
   const grain = parseInt($("#grain")[0].value);
 
   var number;
-
   for (let i = 0; i < data.length; i += 4) {
     number = Math.floor(Math.random() * 100);
     if (number < 50) {
@@ -396,17 +519,21 @@ const imageGrain = () => {
       data[i + 3] = 255;
     }
   }
+
   ctx.putImageData(imageData, 0, 0);
 };
 
 const imageUnsharp = () => {
+  // TODO: Currently resets to the original image.
   imageKernel("blur");
 
   const canvas = $("#canvas")[0];
   const ctx = canvas.getContext("2d");
+
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
   const originalData = originalImage.data;
+
   const unsharp = parseInt($("#unsharp")[0].value) / 100;
 
   for (let i = 0; i < data.length; i += 4) {
@@ -416,6 +543,7 @@ const imageUnsharp = () => {
     data[i + 2] =
       originalData[i + 2] + (data[i + 2] - originalData[i + 2]) * unsharp;
   }
+
   ctx.putImageData(imageData, 0, 0);
 };
 
