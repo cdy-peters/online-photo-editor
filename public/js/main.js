@@ -99,14 +99,31 @@ const readFile = (file) => {
       $("#editOptions").removeAttr("hidden");
     } else {
       $("#exposure").val(0);
+      $("#exposure-value").text(0);
+
       $("#contrast").val(0);
+      $("#contrast-value").text(0);
+
       $("#gamma").val(200);
+      $("#gamma-value").text(2);
+
       $("#saturation").val(0);
+      $("#saturation-value").text(0);
+
       $("#temperature").val(0);
+      $("#temperature-value").text(0);
+
       $("#tint").val(0);
+      $("#tint-value").text(0);
+
       $("#sharpen").val(0);
+      $("#sharpen-value").text(0);
+
       $("#unsharp").val(0);
+      $("#unsharp-value").text(0);
+
       $("#grain").val(0);
+      $("#grain-value").text(0);
     }
   } else {
     alert("Invalid file type, file must be a PNG or JPEG");
@@ -129,23 +146,29 @@ const updateEdits = (key) => {
     // Light
     case "exposure":
       edits.light.exposure = parseInt($("#exposure")[0].value) / 100;
+      $("#exposure-value").text(edits.light.exposure);
       break;
     case "contrast":
       edits.light.contrast = parseInt($("#contrast")[0].value);
+      $("#contrast-value").text(edits.light.contrast);
       break;
     case "gamma":
       edits.light.gamma = parseInt($("#gamma")[0].value) / 100;
+      $("#gamma-value").text(edits.light.gamma);
       break;
 
     // Color
     case "saturation":
       edits.color.saturation = parseInt($("#saturation")[0].value);
+      $("#saturation-value").text(edits.color.saturation);
       break;
     case "temperature":
       edits.color.temperature = parseInt($("#temperature")[0].value);
+      $("#temperature-value").text(edits.color.temperature);
       break;
     case "tint":
       edits.color.tint = parseInt($("#tint")[0].value);
+      $("#tint-value").text(edits.color.tint);
       break;
   }
   updateCanvas();
@@ -556,6 +579,7 @@ const imageGrain = () => {
   const originalData = originalImage.data;
 
   const grain = parseInt($("#grain")[0].value);
+  $("#grain-value").text(grain);
 
   var number;
   for (let i = 0; i < data.length; i += 4) {
@@ -582,6 +606,7 @@ const imageUnsharp = () => {
   const originalData = originalImage.data;
 
   const unsharp = parseInt($("#unsharp")[0].value) / 100;
+  $("#unsharp-value").text(unsharp);
 
   for (let i = 0; i < data.length; i += 4) {
     data[i] = originalData[i] + (data[i] - originalData[i]) * unsharp;
@@ -664,6 +689,7 @@ const imageKernel = (algorithm) => {
 
   if (algorithm === "sharpen") {
     const sharpen = parseInt($("#sharpen")[0].value) + 1;
+    $("#sharpen-value").text(sharpen);
 
     const kernelEdge = -(sharpen - 1) / 4;
     kernel = [

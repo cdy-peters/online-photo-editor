@@ -136,6 +136,47 @@ canvas {
 }
 
 .tabcontent button:hover {
-  background-color: #8e8e8e;
+  background-color: #b3b3b3;
   color: white;
+}
+
+.input-range {
+  margin: 8px;
+}
+
+.input-range p {
+  float: left;
+  width: 5%;
+  text-align: center;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 95%;
+  height: 5px;
+  background: #b3b3b3;
+  outline: none;
+  opacity: 0.7;
+  -webkit-transition: 0.2s;
+  transition: opacity 0.2s;
+  border-radius: 15px;
+}
+
+input[type="range"]:hover {
+  background: #e2e2e2;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #b3b3b3;
+  cursor: pointer;
+  border: 1px solid rgb(52, 52, 52);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  background: #e2e2e2;
 }
