@@ -52,12 +52,10 @@ html {
 }
 
 #canvasContainer {
-  height: 50vh;
-  width: 50vw;
-  margin: 0 auto;
+  padding: 0;
+  height: auto;
+  width: auto;
   position: relative;
-  padding: 10px 20px;
-  border-radius: 6px;
 }
 
 #imageDropzone {
@@ -81,11 +79,10 @@ html {
 }
 
 canvas {
+  max-width: 100%;
   max-height: 50vh;
-  max-width: 50vw;
   margin: auto;
   display: block;
-  position: absolute;
   top: 0;
   left: 0;
   right: 0;
@@ -124,7 +121,8 @@ canvas {
 }
 
 #editOptions {
-  width: calc(50vw + 40px);
+  width: 100%;
+  max-width: 600px;
   margin: 0 auto;
 }
 
@@ -132,6 +130,7 @@ canvas {
   background-color: #515151;
   padding: 8px;
   color: white;
+  border-radius: 0 0 6px 6px;
 }
 
 .tabcontent svg {
@@ -244,27 +243,12 @@ footer {
   background-color: #b3b3b3;
 }
 
-@media screen and (max-width: 425px) {
-  #imageDropzone {
-    display: none;
-  }
-
-  #canvasContainer {
-    padding: 0;
-    height: auto;
-    width: auto;
-  }
-
-  #canvas {
-    max-width: 100%;
-    position: unset;
-  }
-
-  #editOptions {
-    width: 100%;
-  }
-
+@media screen and (max-width: 600px) {
   #tab {
+    border-radius: 0;
+  }
+
+  #tabcontent {
     border-radius: 0;
   }
 
@@ -274,5 +258,15 @@ footer {
 
   #copyright {
     margin: 1em 0;
+  }
+}
+
+@media screen and (max-width: 425px) {
+  #imageDropzone {
+    display: none;
+  }
+
+  #editOptions {
+    width: 100%;
   }
 }
