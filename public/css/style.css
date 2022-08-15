@@ -93,7 +93,6 @@ canvas {
   display: flex;
   background-color: #373737;
   border-radius: 6px 6px 0 0;
-  overflow-x: scroll;
 }
 
 #tab button {
@@ -107,7 +106,6 @@ canvas {
   font-size: 16px;
   cursor: pointer;
   width: calc(100% / 6);
-  min-width: 60px;
 }
 
 #tab button:hover {
@@ -269,5 +267,15 @@ footer {
 
   #editOptions {
     width: 100%;
+  }
+}
+
+@media screen and (max-width: 360px) {
+  #tab {
+    overflow-x: scroll;
+  }
+
+  #tab button {
+    min-width: 60px;
   }
 }
