@@ -5,6 +5,7 @@
 
 html {
   font-family: Helvetica, sans-serif, Arial;
+  background-color: #121212;
 }
 
 body {
@@ -14,13 +15,14 @@ body {
 #title {
   font-size: 1.5em;
   font-weight: bold;
+  margin: 1em 0;
   text-align: center;
-  margin-bottom: 1em;
-  text-align: center;
+  color: white;
 }
 
 #imageActions {
   text-align: center;
+  margin-bottom: 1em;
 }
 
 #imageActions button {
@@ -37,6 +39,10 @@ body {
   border-radius: 3px;
 }
 
+#imageActions button:hover {
+  background-color: #515151;
+}
+
 #imageActions #downloadButton:disabled {
   background-color: #ccc;
   cursor: not-allowed;
@@ -47,18 +53,29 @@ body {
   width: 50vw;
   margin: 0 auto;
   position: relative;
-  padding: 2.5vh 2.5vw;
+  padding: 10px 20px;
+  background-color: #515151;
+  border-radius: 6px;
 }
 
 #imageDropzone {
-  border: 2px dashed grey;
+  background-color: #7b7b7b;
   width: 250px;
   height: 150px;
+  margin: 0 auto;
+  padding: 6px;
+  border-radius: 3px;
+}
+
+#imageDropzoneInner {
+  border: 1px dashed white;
+  border-radius: 3px;
+  color: white;
   text-align: center;
   display: flex;
   align-items: center;
-  margin: 0 auto;
   padding: 15px;
+  height: calc(100% - 30px);
 }
 
 canvas {
@@ -105,7 +122,7 @@ canvas {
 }
 
 #editOptions {
-  width: 50vw;
+  width: calc(50vw + 40px);
   margin: 0 auto;
 }
 
@@ -144,15 +161,21 @@ canvas {
   margin: 8px;
 }
 
+.input-range div {
+  display: flex;
+  align-items: center;
+  margin-top: 3px;
+}
+
 .input-range p {
   float: left;
-  width: 5%;
+  width: 10%;
   text-align: center;
 }
 
 input[type="range"] {
   -webkit-appearance: none;
-  width: 95%;
+  width: 90%;
   height: 5px;
   background: #b3b3b3;
   outline: none;

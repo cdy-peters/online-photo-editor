@@ -37,6 +37,13 @@ const dropHandler = (e) => {
 const dragOverHandler = (e) => {
   e.preventDefault();
   e.stopPropagation();
+  $("#imageDropzone").css("background-color", "#b3b3b3");
+};
+
+const dragLeaveHandler = (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  $("#imageDropzone").css("background-color", "#7b7b7b");
 };
 
 // Read File
@@ -97,6 +104,7 @@ const readFile = (file) => {
       $("#imageDropzone").css("display", "none");
       $("#downloadButton").removeAttr("disabled");
       $("#editOptions").removeAttr("hidden");
+      $("#canvasContainer").removeAttr("hidden");
     } else {
       $("#exposure").val(0);
       $("#exposure-value").text(0);
@@ -104,8 +112,8 @@ const readFile = (file) => {
       $("#contrast").val(0);
       $("#contrast-value").text(0);
 
-      $("#gamma").val(200);
-      $("#gamma-value").text(2);
+      $("#gamma").val(0);
+      $("#gamma-value").text(0);
 
       $("#saturation").val(0);
       $("#saturation-value").text(0);
@@ -153,8 +161,8 @@ const updateEdits = (key) => {
       $("#contrast-value").text(edits.light.contrast);
       break;
     case "gamma":
-      edits.light.gamma = parseInt($("#gamma")[0].value) / 100;
-      $("#gamma-value").text(edits.light.gamma);
+      edits.light.gamma = parseInt($("#gamma")[0].value) / 100 + 2;
+      $("#gamma-value").text((edits.light.gamma - 2).toFixed(2));
       break;
 
     // Color
