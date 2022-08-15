@@ -138,46 +138,55 @@ const readFile = (file) => {
   }
 };
 
+const updateFilters = (key) => {
+  for (const filter in edits.filters) {
+    if (key === filter) {
+      edits.filters[filter] = !edits.filters[filter];
+      if (edits.filters[filter]) {
+        $(`#${filter}`).css("background-color", "#b3b3b3");
+      } else {
+        $(`#${filter}`).css("background-color", "#7b7b7b");
+      }
+    } else {
+      edits.filters[filter] = false;
+      $(`#${filter}`).css("background-color", "#7b7b7b");
+    }
+  }
+};
+
 const updateEdits = (key) => {
-  switch (key) {
-    // Filters
-    case "grayscale":
-      edits.filters.grayscale = !edits.filters.grayscale;
-      break;
-    case "sepia":
-      edits.filters.sepia = !edits.filters.sepia;
-      break;
-    case "invert":
-      edits.filters.invert = !edits.filters.invert;
-      break;
+  if (key === "grayscale" || key === "sepia" || key === "invert") {
+    updateFilters(key);
+  } else {
+    switch (key) {
+      // Light
+      case "exposure":
+        edits.light.exposure = parseInt($("#exposure")[0].value) / 100;
+        $("#exposure-value").text(edits.light.exposure);
+        break;
+      case "contrast":
+        edits.light.contrast = parseInt($("#contrast")[0].value);
+        $("#contrast-value").text(edits.light.contrast);
+        break;
+      case "gamma":
+        edits.light.gamma = parseInt($("#gamma")[0].value) / 100 + 2;
+        $("#gamma-value").text((edits.light.gamma - 2).toFixed(2));
+        break;
 
-    // Light
-    case "exposure":
-      edits.light.exposure = parseInt($("#exposure")[0].value) / 100;
-      $("#exposure-value").text(edits.light.exposure);
-      break;
-    case "contrast":
-      edits.light.contrast = parseInt($("#contrast")[0].value);
-      $("#contrast-value").text(edits.light.contrast);
-      break;
-    case "gamma":
-      edits.light.gamma = parseInt($("#gamma")[0].value) / 100 + 2;
-      $("#gamma-value").text((edits.light.gamma - 2).toFixed(2));
-      break;
-
-    // Color
-    case "saturation":
-      edits.color.saturation = parseInt($("#saturation")[0].value);
-      $("#saturation-value").text(edits.color.saturation);
-      break;
-    case "temperature":
-      edits.color.temperature = parseInt($("#temperature")[0].value);
-      $("#temperature-value").text(edits.color.temperature);
-      break;
-    case "tint":
-      edits.color.tint = parseInt($("#tint")[0].value);
-      $("#tint-value").text(edits.color.tint);
-      break;
+      // Color
+      case "saturation":
+        edits.color.saturation = parseInt($("#saturation")[0].value);
+        $("#saturation-value").text(edits.color.saturation);
+        break;
+      case "temperature":
+        edits.color.temperature = parseInt($("#temperature")[0].value);
+        $("#temperature-value").text(edits.color.temperature);
+        break;
+      case "tint":
+        edits.color.tint = parseInt($("#tint")[0].value);
+        $("#tint-value").text(edits.color.tint);
+        break;
+    }
   }
   updateCanvas();
 };
