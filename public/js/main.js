@@ -5,6 +5,7 @@ const image = new Image();
 var originalImage;
 var imageName;
 var edits;
+var gpuEdit;
 
 const gpuCanvas = $("#gpuCanvas")[0];
 const gpuCtx = gpuCanvas.getContext("2d");
@@ -255,12 +256,12 @@ const updateCanvas = () => {
     invertFilter();
   }
   if (edits.filters.emboss) {
+    gpuEdit = "emboss";
     gpuImage.src = canvas.toDataURL();
-    embossFilter();
   }
   if (edits.filters.outline) {
+    gpuEdit = "outline";
     gpuImage.src = canvas.toDataURL();
-    outlineFilter();
   }
 
   // Light
@@ -287,13 +288,25 @@ const updateCanvas = () => {
 
   // Detail
   if (edits.detail.sharpness !== 1) {
+    gpuEdit = "sharpness";
     gpuImage.src = canvas.toDataURL();
-    imageSharpness();
   }
 
   // Effects
   if (edits.effects.blur !== 0) {
+    gpuEdit = "blur";
     gpuImage.src = canvas.toDataURL();
+  }
+};
+
+gpuImage.onload = () => {
+  if (gpuEdit === "emboss") {
+    embossFilter();
+  } else if (gpuEdit === "outline") {
+    outlineFilter();
+  } else if (gpuEdit === "sharpness") {
+    imageSharpness();
+  } else if (gpuEdit === "blur") {
     imageBlur();
   }
 };
