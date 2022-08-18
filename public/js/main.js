@@ -75,7 +75,7 @@ const readFile = (file) => {
       light: {
         exposure: 0,
         contrast: 0,
-        gamma: 200,
+        gamma: 1.5,
       },
       color: {
         saturation: 0,
@@ -208,8 +208,8 @@ const updateEdits = (key) => {
         $("#contrast-value").text(edits.light.contrast);
         break;
       case "gamma":
-        edits.light.gamma = parseInt($("#gamma")[0].value) / 100 + 2;
-        $("#gamma-value").text((edits.light.gamma - 2).toFixed(2));
+        edits.light.gamma = (parseInt($("#gamma")[0].value) + 150) / 100;
+        $("#gamma-value").text((edits.light.gamma - 1.5).toFixed(2));
         break;
 
       // Color
@@ -270,7 +270,7 @@ const updateCanvas = () => {
   if (edits.light.contrast !== 0) {
     imageContrast();
   }
-  if (edits.light.gamma !== 200) {
+  if (edits.light.gamma !== 1.5) {
     imageGamma();
   }
 
@@ -668,7 +668,6 @@ const imageGrain = () => {
 
 const imageBlur = () => {
   const blur = edits.effects.blur;
-  console.log(blur);
 
   const kernel = gpu.createKernel(function (image, blur) {
     const width = this.constants.width;
