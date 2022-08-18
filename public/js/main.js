@@ -1,9 +1,24 @@
+const canvas = $("#canvas")[0];
+const ctx = canvas.getContext("2d");
+const image = new Image();
+
 var originalImage;
 var imageName;
 var edits;
 
+const gpuCanvas = $("#gpuCanvas")[0];
+const gpuCtx = gpuCanvas.getContext("2d");
+const gpuImage = new Image();
+const gpu = new GPU({
+  gpuCanvas,
+});
+const settings = {
+  graphical: true,
+  constants: {},
+  output: [],
+};
+
 const download = () => {
-  const canvas = $("#canvas")[0];
   const image = canvas.toDataURL("image/png");
   const link = document.createElement("a");
   link.download = imageName + " - Edited.png";
@@ -68,7 +83,7 @@ const readFile = (file) => {
         tint: 0,
       },
       detail: {
-        sharpen: 0,
+        sharpness: 1,
         noiseReduction: false,
       },
       effects: {
@@ -83,11 +98,7 @@ const readFile = (file) => {
     const reader = new FileReader();
 
     reader.onload = (e) => {
-      const image = new Image();
       image.src = e.target.result;
-
-      const canvas = $("#canvas")[0];
-      const ctx = canvas.getContext("2d");
 
       image.onload = () => {
         canvas.width = image.width;
@@ -95,7 +106,28 @@ const readFile = (file) => {
 
         ctx.drawImage(image, 0, 0);
 
-        originalImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        if (!originalImage) {
+          originalImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+          // Gpu image
+          gpuImage.src = e.target.result;
+
+          gpuCanvas.width = image.width;
+          gpuCanvas.height = image.height;
+
+          settings.constants = {
+            width: image.width,
+            height: image.height,
+          };
+          settings.output = [image.width, image.height];
+
+          const kernel = gpu.createKernel(function (gpuImage) {
+            const pixel = gpuImage[this.thread.y][this.thread.x];
+            this.color(pixel[0], pixel[1], pixel[2]);
+          }, settings);
+
+          kernel(gpuImage);
+        }
       };
     };
     reader.readAsDataURL(file);
@@ -124,11 +156,11 @@ const readFile = (file) => {
       $("#tint").val(0);
       $("#tint-value").text(0);
 
-      $("#sharpen").val(0);
-      $("#sharpen-value").text(0);
+      $("#sharpness").val(0);
+      $("#sharpness-value").text(0);
 
-      $("#unsharp").val(0);
-      $("#unsharp-value").text(0);
+      $("#blur").val(0);
+      $("#blur-value").text(0);
 
       $("#grain").val(0);
       $("#grain-value").text(0);
@@ -142,6 +174,7 @@ const updateFilters = (key) => {
   for (const filter in edits.filters) {
     if (key === filter) {
       edits.filters[filter] = !edits.filters[filter];
+
       if (edits.filters[filter]) {
         $(`#${filter}`).css("background-color", "#b3b3b3");
       } else {
@@ -155,13 +188,19 @@ const updateFilters = (key) => {
 };
 
 const updateEdits = (key) => {
-  if (key === "grayscale" || key === "sepia" || key === "invert") {
+  if (
+    key === "grayscale" ||
+    key === "sepia" ||
+    key === "invert" ||
+    key === "emboss" ||
+    key === "outline"
+  ) {
     updateFilters(key);
   } else {
     switch (key) {
       // Light
       case "exposure":
-        edits.light.exposure = parseInt($("#exposure")[0].value) / 100;
+        edits.light.exposure = (parseInt($("#exposure")[0].value) * 3) / 100;
         $("#exposure-value").text(edits.light.exposure);
         break;
       case "contrast":
@@ -186,14 +225,23 @@ const updateEdits = (key) => {
         edits.color.tint = parseInt($("#tint")[0].value);
         $("#tint-value").text(edits.color.tint);
         break;
+
+      // Detail
+      case "sharpness":
+        edits.detail.sharpness = parseInt($("#sharpness")[0].value) + 1;
+        $("#sharpness-value").text(edits.detail.sharpness - 1);
+        break;
+
+      case "blur":
+        edits.effects.blur = parseInt($("#blur")[0].value) / 100;
+        $("#blur-value").text(edits.effects.blur);
+        break;
     }
   }
   updateCanvas();
 };
 
 const updateCanvas = () => {
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
   ctx.putImageData(originalImage, 0, 0);
 
   // Filters
@@ -205,6 +253,14 @@ const updateCanvas = () => {
   }
   if (edits.filters.invert) {
     invertFilter();
+  }
+  if (edits.filters.emboss) {
+    gpuImage.src = canvas.toDataURL();
+    embossFilter();
+  }
+  if (edits.filters.outline) {
+    gpuImage.src = canvas.toDataURL();
+    outlineFilter();
   }
 
   // Light
@@ -228,13 +284,22 @@ const updateCanvas = () => {
   if (edits.color.tint !== 0) {
     imageTint();
   }
+
+  // Detail
+  if (edits.detail.sharpness !== 1) {
+    gpuImage.src = canvas.toDataURL();
+    imageSharpness();
+  }
+
+  // Effects
+  if (edits.effects.blur !== 0) {
+    gpuImage.src = canvas.toDataURL();
+    imageBlur();
+  }
 };
 
 // * ------------------------------ Adjust ------------------------------ //
 const mirrorImage = () => {
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
 
@@ -257,9 +322,6 @@ const mirrorImage = () => {
 };
 
 const reflectImage = () => {
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
 
@@ -283,9 +345,6 @@ const reflectImage = () => {
 };
 
 const rotateClockwise = () => {
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-
   const newWidth = canvas.height;
   const newHeight = canvas.width;
 
@@ -314,9 +373,6 @@ const rotateClockwise = () => {
 };
 
 const rotateCounterClockwise = () => {
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-
   const newWidth = canvas.height;
   const newHeight = canvas.width;
 
@@ -345,11 +401,7 @@ const rotateCounterClockwise = () => {
 };
 
 // * ------------------------------ Filters ------------------------------ //
-// TODO: Be able to remove filters
 const grayscaleFilter = () => {
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
 
@@ -364,9 +416,6 @@ const grayscaleFilter = () => {
 };
 
 const sepiaFilter = () => {
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
 
@@ -382,8 +431,6 @@ const sepiaFilter = () => {
 };
 
 const invertFilter = () => {
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
   for (let i = 0; i < data.length; i += 4) {
@@ -394,11 +441,26 @@ const invertFilter = () => {
   ctx.putImageData(imageData, 0, 0);
 };
 
+const embossFilter = () => {
+  const matrix = [
+    [-2, -1, 0],
+    [-1, 1, 1],
+    [0, 1, 2],
+  ];
+  imageKernel(matrix);
+};
+
+const outlineFilter = () => {
+  const matrix = [
+    [-1, -1, -1],
+    [-1, 8, -1],
+    [-1, -1, -1],
+  ];
+  imageKernel(matrix);
+};
+
 // * ------------------------------ Light ------------------------------ //
 const imageExposure = () => {
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
 
@@ -418,9 +480,6 @@ const imageExposure = () => {
 };
 
 const imageContrast = () => {
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
 
@@ -451,9 +510,6 @@ const imageContrast = () => {
 };
 
 const imageGamma = () => {
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
 
@@ -474,9 +530,6 @@ const imageGamma = () => {
 
 // * ------------------------------ Color ------------------------------ //
 const imageSaturation = () => {
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
 
@@ -500,9 +553,6 @@ const imageSaturation = () => {
 };
 
 const imageTemperature = () => {
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
 
@@ -522,9 +572,6 @@ const imageTemperature = () => {
 };
 
 const imageTint = () => {
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
 
@@ -546,8 +593,6 @@ const imageTint = () => {
 // * ------------------------------ Detail ------------------------------ //
 const imageNoiseReduction = () => {
   // TODO: Currently resets to the original image.
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
 
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
@@ -586,11 +631,21 @@ const imageNoiseReduction = () => {
   ctx.putImageData(imageData, 0, 0);
 };
 
+const imageSharpness = () => {
+  const sharpness = edits.detail.sharpness;
+
+  const matrixEdge = -(sharpness - 1) / 4;
+  matrix = [
+    [0, matrixEdge, 0],
+    [matrixEdge, sharpness, matrixEdge],
+    [0, matrixEdge, 0],
+  ];
+
+  imageKernel(matrix);
+};
+
 // * ------------------------------ Effects ------------------------------ //
 const imageGrain = () => {
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
   const originalData = originalImage.data;
@@ -611,29 +666,54 @@ const imageGrain = () => {
   ctx.putImageData(imageData, 0, 0);
 };
 
-const imageUnsharp = () => {
-  // TODO: Currently resets to the original image.
-  imageKernel("blur");
+const imageBlur = () => {
+  const blur = edits.effects.blur;
+  console.log(blur);
 
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
+  const kernel = gpu.createKernel(function (image, blur) {
+    const width = this.constants.width;
+    const height = this.constants.height;
 
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
-  const originalData = originalImage.data;
+    var redSum = 0;
+    var greenSum = 0;
+    var blueSum = 0;
 
-  const unsharp = parseInt($("#unsharp")[0].value) / 100;
-  $("#unsharp-value").text(unsharp);
+    const matrix = [
+      [0.111, 0.111, 0.111],
+      [0.111, 0.111, 0.111],
+      [0.111, 0.111, 0.111],
+    ];
 
-  for (let i = 0; i < data.length; i += 4) {
-    data[i] = originalData[i] + (data[i] - originalData[i]) * unsharp;
-    data[i + 1] =
-      originalData[i + 1] + (data[i + 1] - originalData[i + 1]) * unsharp;
-    data[i + 2] =
-      originalData[i + 2] + (data[i + 2] - originalData[i + 2]) * unsharp;
-  }
+    for (var i = -1; i < 2; i++) {
+      for (var j = -1; j < 2; j++) {
+        var x = this.thread.x + i;
+        var y = this.thread.y + j;
 
-  ctx.putImageData(imageData, 0, 0);
+        if (x < 0 || x >= width) {
+          x = this.thread.x;
+        }
+        if (y < 0 || y >= height) {
+          y = this.thread.y;
+        }
+
+        const pixel = image[y][x];
+
+        redSum += pixel[0] * matrix[i + 1][j + 1];
+        greenSum += pixel[1] * matrix[i + 1][j + 1];
+        blueSum += pixel[2] * matrix[i + 1][j + 1];
+      }
+    }
+
+    const pixel = image[this.thread.y][this.thread.x];
+    var red = pixel[0] + (redSum - pixel[0]) * blur;
+    var green = pixel[1] + (greenSum - pixel[1]) * blur;
+    var blue = pixel[2] + (blueSum - pixel[2]) * blur;
+
+    this.color(red, green, blue);
+  }, settings);
+
+  kernel(gpuImage, blur);
+  image.src = kernel.canvas.toDataURL();
 };
 
 // * ------------------------------ Util functions ------------------------------ //
@@ -656,137 +736,40 @@ const truncateRGB = (value) => {
   }
 };
 
-// Kernel functions
-const kernelRows = (offset, originalData, factors) => {
-  var redSum = 0;
-  var greenSum = 0;
-  var blueSum = 0;
+const imageKernel = (matrix) => {
+  const kernel = gpu.createKernel(function (image, matrix) {
+    const width = this.constants.width;
+    const height = this.constants.height;
 
-  // Left pixel
-  if (offset % (canvas.width * 4) === 0) {
-    // Left most pixels
-    redSum += originalData[offset] * factors[0];
-    greenSum += originalData[offset + 1] * factors[0];
-    blueSum += originalData[offset + 2] * factors[0];
-  } else {
-    redSum += originalData[offset - 4] * factors[0];
-    greenSum += originalData[offset - 4 + 1] * factors[0];
-    blueSum += originalData[offset - 4 + 2] * factors[0];
-  }
-
-  // Middle pixel
-  redSum += originalData[offset] * factors[1];
-  greenSum += originalData[offset + 1] * factors[1];
-  blueSum += originalData[offset + 2] * factors[1];
-
-  // Right pixel
-  if (offset % (canvas.width * 4) === (canvas.width - 1) * 4) {
-    // Right most pixels
-    redSum += originalData[offset] * factors[2];
-    greenSum += originalData[offset + 1] * factors[2];
-    blueSum += originalData[offset + 2] * factors[2];
-  } else {
-    redSum += originalData[offset + 4] * factors[2];
-    greenSum += originalData[offset + 4 + 1] * factors[2];
-    blueSum += originalData[offset + 4 + 2] * factors[2];
-  }
-
-  return [redSum, greenSum, blueSum];
-};
-
-const imageKernel = (algorithm) => {
-  // TODO: Currently resets to the original image.
-  const canvas = $("#canvas")[0];
-  const ctx = canvas.getContext("2d");
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
-  const originalData = originalImage.data;
-
-  var kernel;
-
-  if (algorithm === "sharpen") {
-    const sharpen = parseInt($("#sharpen")[0].value) + 1;
-    $("#sharpen-value").text(sharpen);
-
-    const kernelEdge = -(sharpen - 1) / 4;
-    kernel = [
-      [0, kernelEdge, 0],
-      [kernelEdge, sharpen, kernelEdge],
-      [0, kernelEdge, 0],
-    ];
-  }
-  if (algorithm === "blur") {
-    kernel = [
-      [0.111, 0.111, 0.111],
-      [0.111, 0.111, 0.111],
-      [0.111, 0.111, 0.111],
-    ];
-  }
-  if (algorithm === "emboss") {
-    kernel = [
-      [-2, -1, 0],
-      [-1, 1, 1],
-      [0, 1, 2],
-    ];
-  }
-  if (algorithm === "outline") {
-    kernel = [
-      [-1, -1, -1],
-      [-1, 8, -1],
-      [-1, -1, -1],
-    ];
-  }
-
-  for (let i = 0; i < data.length; i += 4) {
     var redSum = 0;
     var greenSum = 0;
     var blueSum = 0;
 
-    // Top row
-    if (i < canvas.width * 4) {
-      // First row of pixels
-      var row = kernelRows(i, originalData, kernel[0]);
+    for (var i = -1; i < 2; i++) {
+      for (var j = -1; j < 2; j++) {
+        var x = this.thread.x + i;
+        var y = this.thread.y + j;
 
-      redSum += row[0];
-      greenSum += row[1];
-      blueSum += row[2];
-    } else {
-      var offset = i - canvas.width * 4;
-      var row = kernelRows(offset, originalData, kernel[0]);
+        if (x < 0 || x >= width) {
+          x = this.thread.x;
+        }
+        if (y < 0 || y >= height) {
+          y = this.thread.y;
+        }
 
-      redSum += row[0];
-      greenSum += row[1];
-      blueSum += row[2];
+        const pixel = image[y][x];
+
+        redSum += pixel[0] * matrix[i + 1][j + 1];
+        greenSum += pixel[1] * matrix[i + 1][j + 1];
+        blueSum += pixel[2] * matrix[i + 1][j + 1];
+      }
     }
 
-    row = kernelRows(i, originalData, kernel[1]);
+    this.color(redSum, greenSum, blueSum);
+  }, settings);
 
-    redSum += row[0];
-    greenSum += row[1];
-    blueSum += row[2];
-
-    // Bottom row
-    if (i >= data.length - canvas.width * 4) {
-      // Last row of pixels
-      var row = kernelRows(i, originalData, kernel[0]);
-
-      redSum += row[0];
-      greenSum += row[1];
-      blueSum += row[2];
-    } else {
-      offset = i + canvas.width * 4;
-      row = kernelRows(offset, originalData, kernel[2]);
-
-      redSum += row[0];
-      greenSum += row[1];
-      blueSum += row[2];
-    }
-
-    data[i] = truncateRGB(redSum);
-    data[i + 1] = truncateRGB(greenSum);
-    data[i + 2] = truncateRGB(blueSum);
-  }
-  ctx.putImageData(imageData, 0, 0);
+  kernel(gpuImage, matrix);
+  image.src = kernel.canvas.toDataURL();
 };
 
 // Noise reduction functions
