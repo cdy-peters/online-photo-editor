@@ -17,6 +17,7 @@ const settings = {
   graphical: true,
   constants: {},
   output: [],
+  maxTexSize: [],
 };
 
 const download = () => {
@@ -100,13 +101,7 @@ const readFile = (file) => {
             height: image.height,
           };
           settings.output = [image.width, image.height];
-
-          const kernel = gpu.createKernel(function (gpuImage) {
-            const pixel = gpuImage[this.thread.y][this.thread.x];
-            this.color(pixel[0], pixel[1], pixel[2]);
-          }, settings);
-
-          kernel(gpuImage);
+          settings.maxTexSize = [image.width, image.height];
         }
       };
     };
