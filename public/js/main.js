@@ -181,9 +181,15 @@ const updateEdits = (key) => {
         $("#sharpness-value").text(edits.detail.sharpness - 1);
         break;
 
+      // Effects
       case "blur":
         edits.effects.blur = parseInt($("#blur")[0].value) / 100;
         $("#blur-value").text(edits.effects.blur);
+        break;
+
+      case "grain":
+        edits.effects.grain = parseInt($("#grain")[0].value);
+        $("#grain-value").text(edits.effects.grain);
         break;
     }
   }
@@ -244,6 +250,10 @@ const updateCanvas = () => {
   if (edits.effects.blur !== 0) {
     gpuEdit = "blur";
     gpuImage.src = canvas.toDataURL();
+  }
+
+  if (edits.effects.grain !== 0) {
+    imageGrain();
   }
 };
 
@@ -611,8 +621,7 @@ const imageGrain = () => {
   const data = imageData.data;
   const originalData = originalImage.data;
 
-  const grain = parseInt($("#grain")[0].value);
-  $("#grain-value").text(grain);
+  const grain = edits.effects.grain;
 
   var number;
   for (let i = 0; i < data.length; i += 4) {
