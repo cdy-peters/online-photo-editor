@@ -46,7 +46,8 @@ html {
   background-color: #515151;
 }
 
-#imageActions #downloadButton:disabled {
+#imageActions #downloadButton:disabled,
+#imageActions #resetButton:disabled {
   background-color: #ccc;
   cursor: not-allowed;
 }

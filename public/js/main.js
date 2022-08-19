@@ -27,6 +27,11 @@ const download = () => {
   link.click();
 };
 
+const reset = () => {
+  resetValues();
+  updateCanvas();
+};
+
 // Select file
 const selectFile = (input) => {
   if (input.files.length === 1) {
@@ -65,36 +70,8 @@ const dragLeaveHandler = (e) => {
 // Read File
 const readFile = (file) => {
   if (file.type === "image/png" || file.type === "image/jpeg") {
-    edits = {
-      filters: {
-        grayscale: false,
-        sepia: false,
-        invert: false,
-        emboss: false,
-        outline: false,
-      },
-      light: {
-        exposure: 0,
-        contrast: 0,
-        gamma: 1.5,
-      },
-      color: {
-        saturation: 0,
-        temperature: 0,
-        tint: 0,
-      },
-      detail: {
-        sharpness: 1,
-        noiseReduction: false,
-      },
-      effects: {
-        blur: 0,
-        grain: 0,
-      },
-    };
-
-    imageName = file.name;
-    imageName = imageName.substring(0, imageName.lastIndexOf("."));
+    fileName = file.name;
+    fileName = fileName.substring(0, fileName.lastIndexOf("."));
 
     const reader = new FileReader();
 
@@ -107,7 +84,9 @@ const readFile = (file) => {
 
         ctx.drawImage(image, 0, 0);
 
-        if (!originalImage) {
+        if (!imageName || imageName !== fileName) {
+          resetValues();
+          imageName = fileName;
           originalImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
           // Gpu image
@@ -136,35 +115,9 @@ const readFile = (file) => {
     if ($("#editOptions").attr("hidden")) {
       $("#imageDropzone").css("display", "none");
       $("#downloadButton").removeAttr("disabled");
+      $("#resetButton").removeAttr("disabled");
       $("#editOptions").removeAttr("hidden");
       $("#canvasContainer").removeAttr("hidden");
-    } else {
-      $("#exposure").val(0);
-      $("#exposure-value").text(0);
-
-      $("#contrast").val(0);
-      $("#contrast-value").text(0);
-
-      $("#gamma").val(0);
-      $("#gamma-value").text(0);
-
-      $("#saturation").val(0);
-      $("#saturation-value").text(0);
-
-      $("#temperature").val(0);
-      $("#temperature-value").text(0);
-
-      $("#tint").val(0);
-      $("#tint-value").text(0);
-
-      $("#sharpness").val(0);
-      $("#sharpness-value").text(0);
-
-      $("#blur").val(0);
-      $("#blur-value").text(0);
-
-      $("#grain").val(0);
-      $("#grain-value").text(0);
     }
   } else {
     alert("Invalid file type, file must be a PNG or JPEG");
@@ -729,6 +682,63 @@ const imageBlur = () => {
 };
 
 // * ------------------------------ Util functions ------------------------------ //
+const resetValues = () => {
+  edits = {
+    filters: {
+      grayscale: false,
+      sepia: false,
+      invert: false,
+      emboss: false,
+      outline: false,
+    },
+    light: {
+      exposure: 0,
+      contrast: 0,
+      gamma: 1.5,
+    },
+    color: {
+      saturation: 0,
+      temperature: 0,
+      tint: 0,
+    },
+    detail: {
+      sharpness: 1,
+      noiseReduction: false,
+    },
+    effects: {
+      blur: 0,
+      grain: 0,
+    },
+  };
+
+  $("#exposure").val(0);
+  $("#exposure-value").text(0);
+
+  $("#contrast").val(0);
+  $("#contrast-value").text(0);
+
+  $("#gamma").val(0);
+  $("#gamma-value").text(0);
+
+  $("#saturation").val(0);
+  $("#saturation-value").text(0);
+
+  $("#temperature").val(0);
+  $("#temperature-value").text(0);
+
+  $("#tint").val(0);
+  $("#tint-value").text(0);
+
+  $("#sharpness").val(0);
+  $("#sharpness-value").text(0);
+
+  $("#blur").val(0);
+  $("#blur-value").text(0);
+
+  $("#grain").val(0);
+  $("#grain-value").text(0);
+};
+
 var prevTab = "adjust";
 const openTab = (e, tab) => {
   $(`#${prevTab}`).hide();
