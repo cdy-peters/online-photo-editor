@@ -562,46 +562,6 @@ const imageTint = () => {
 };
 
 // * ------------------------------ Detail ------------------------------ //
-const imageNoiseReduction = () => {
-  // TODO: Currently resets to the original image.
-
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
-  const originalData = originalImage.data;
-
-  for (let i = 0; i < data.length; i += 4) {
-    redArr = [];
-    greenArr = [];
-    blueArr = [];
-
-    // Top row
-    if (i < canvas.width * 4) {
-      noiseReductionRows(i, originalData);
-    } else {
-      var offset = i - canvas.width * 4;
-      noiseReductionRows(offset, originalData);
-    }
-
-    // Middle row
-    noiseReductionRows(i, originalData);
-
-    // Bottom row
-    if (i > data.length - canvas.width * 4) {
-      noiseReductionRows(i, originalData);
-    } else {
-      var offset = i + canvas.width * 4;
-      noiseReductionRows(offset, originalData);
-    }
-
-    // Get median of each kernel
-    data[i] = kernelMedian(redArr);
-    data[i + 1] = kernelMedian(greenArr);
-    data[i + 2] = kernelMedian(blueArr);
-  }
-
-  ctx.putImageData(imageData, 0, 0);
-};
-
 const imageSharpness = () => {
   const sharpness = edits.detail.sharpness;
 
@@ -796,41 +756,4 @@ const imageKernel = (matrix) => {
 
   kernel(gpuImage, matrix);
   image.src = kernel.canvas.toDataURL();
-};
-
-// Noise reduction functions
-const noiseReductionRows = (offset, originalData) => {
-  // Left pixel
-  if (offset % (canvas.width * 4) === 0) {
-    // Left most pixels
-    redArr.push(originalData[offset]);
-    greenArr.push(originalData[offset + 1]);
-    blueArr.push(originalData[offset + 2]);
-  } else {
-    redArr.push(originalData[offset - 4]);
-    greenArr.push(originalData[offset - 4 + 1]);
-    blueArr.push(originalData[offset - 4 + 2]);
-  }
-
-  // Middle pixel
-  redArr.push(originalData[offset]);
-  greenArr.push(originalData[offset + 1]);
-  blueArr.push(originalData[offset + 2]);
-
-  // Right pixel
-  if (offset % (canvas.width * 4) === (canvas.width - 1) * 4) {
-    // Right most pixels
-    redArr.push(originalData[offset]);
-    greenArr.push(originalData[offset + 1]);
-    blueArr.push(originalData[offset + 2]);
-  } else {
-    redArr.push(originalData[offset + 4]);
-    greenArr.push(originalData[offset + 4 + 1]);
-    blueArr.push(originalData[offset + 4 + 2]);
-  }
-};
-
-const kernelMedian = (arr) => {
-  arr.sort((a, b) => a - b);
-  return arr[4];
 };
