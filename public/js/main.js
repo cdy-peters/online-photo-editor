@@ -5,7 +5,6 @@ const image = new Image();
 var originalImage;
 var imageName;
 var edits;
-var gpuEdit;
 
 const gpuCanvas = $("#gpuCanvas")[0];
 const gpuCtx = gpuCanvas.getContext("2d");
@@ -137,13 +136,7 @@ const updateFilters = (key) => {
 };
 
 const updateEdits = (key) => {
-  if (
-    key === "grayscale" ||
-    key === "sepia" ||
-    key === "invert" ||
-    key === "emboss" ||
-    key === "outline"
-  ) {
+  if (key === "grayscale" || key === "sepia" || key === "invert") {
     updateFilters(key);
   } else {
     switch (key) {
@@ -215,14 +208,6 @@ const updateCanvas = () => {
   if (edits.filters.invert) {
     invertFilter();
   }
-  if (edits.filters.emboss) {
-    gpuEdit = "emboss";
-    gpuImage.src = canvas.toDataURL();
-  }
-  if (edits.filters.outline) {
-    gpuEdit = "outline";
-    gpuImage.src = canvas.toDataURL();
-  }
 
   // Light
   if (edits.light.exposure !== 0) {
@@ -248,13 +233,11 @@ const updateCanvas = () => {
 
   // Detail
   if (edits.detail.sharpness !== 1) {
-    gpuEdit = "sharpness";
     gpuImage.src = canvas.toDataURL();
   }
 
   // Effects
   if (edits.detail.blur !== 0) {
-    gpuEdit = "blur";
     gpuImage.src = canvas.toDataURL();
   }
 
@@ -264,13 +247,9 @@ const updateCanvas = () => {
 };
 
 gpuImage.onload = () => {
-  if (gpuEdit === "emboss") {
-    embossFilter();
-  } else if (gpuEdit === "outline") {
-    outlineFilter();
-  } else if (gpuEdit === "sharpness") {
+  if (edits.detail.sharpness !== 1) {
     imageSharpness();
-  } else if (gpuEdit === "blur") {
+  } else if (edits.detail.blur !== 0) {
     imageBlur();
   }
 };
@@ -416,24 +395,6 @@ const invertFilter = () => {
     data[i + 2] = 255 - data[i + 2];
   }
   ctx.putImageData(imageData, 0, 0);
-};
-
-const embossFilter = () => {
-  const matrix = [
-    [-2, -1, 0],
-    [-1, 1, 1],
-    [0, 1, 2],
-  ];
-  imageKernel(matrix);
-};
-
-const outlineFilter = () => {
-  const matrix = [
-    [-1, -1, -1],
-    [-1, 8, -1],
-    [-1, -1, -1],
-  ];
-  imageKernel(matrix);
 };
 
 // * ------------------------------ Light ------------------------------ //
@@ -658,8 +619,6 @@ const resetValues = () => {
       grayscale: false,
       sepia: false,
       invert: false,
-      emboss: false,
-      outline: false,
     },
     light: {
       exposure: 0,
