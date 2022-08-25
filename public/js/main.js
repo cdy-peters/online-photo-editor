@@ -256,8 +256,7 @@ gpuImage.onload = () => {
 
 // * ------------------------------ Adjust ------------------------------ //
 const mirrorImage = () => {
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
+  const data = originalImage.data;
 
   const newData = new Uint8ClampedArray(data.length);
   const newImageData = new ImageData(newData, canvas.width, canvas.height);
@@ -274,12 +273,11 @@ const mirrorImage = () => {
   }
 
   originalImage = newImageData;
-  ctx.putImageData(newImageData, 0, 0);
+  updateCanvas();
 };
 
 const reflectImage = () => {
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
+  const data = originalImage.data;
 
   const newData = new Uint8ClampedArray(data.length);
   const newImageData = new ImageData(newData, canvas.width, canvas.height);
@@ -297,17 +295,17 @@ const reflectImage = () => {
   }
 
   originalImage = newImageData;
-  ctx.putImageData(newImageData, 0, 0);
+  updateCanvas();
 };
 
 const rotateClockwise = () => {
   const newWidth = canvas.height;
   const newHeight = canvas.width;
 
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
+  const data = originalImage.data;
+
   const newData = new Uint8ClampedArray(data.length);
-  const newImageData = new ImageData(newData, canvas.height, canvas.width);
+  const newImageData = new ImageData(newData, newWidth, newHeight);
 
   for (let i = 0; i < canvas.width; i++) {
     for (let j = 0; j < canvas.height; j++) {
@@ -324,18 +322,28 @@ const rotateClockwise = () => {
 
   canvas.width = newWidth;
   canvas.height = newHeight;
+
+  gpuCanvas.width = newWidth;
+  gpuCanvas.height = newHeight;
+
+  settings.constants.width = newWidth;
+  settings.constants.height = newHeight;
+
+  settings.output = [newWidth, newHeight];
+  settings.maxTexSize = [newWidth, newHeight];
+
   originalImage = newImageData;
-  ctx.putImageData(newImageData, 0, 0);
+  updateCanvas();
 };
 
 const rotateCounterClockwise = () => {
   const newWidth = canvas.height;
   const newHeight = canvas.width;
 
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
+  const data = originalImage.data;
+
   const newData = new Uint8ClampedArray(data.length);
-  const newImageData = new ImageData(newData, canvas.height, canvas.width);
+  const newImageData = new ImageData(newData, newWidth, newHeight);
 
   for (let i = 0; i < canvas.width; i++) {
     for (let j = 0; j < canvas.height; j++) {
@@ -352,8 +360,18 @@ const rotateCounterClockwise = () => {
 
   canvas.width = newWidth;
   canvas.height = newHeight;
+
+  gpuCanvas.width = newWidth;
+  gpuCanvas.height = newHeight;
+
+  settings.constants.width = newWidth;
+  settings.constants.height = newHeight;
+
+  settings.output = [newWidth, newHeight];
+  settings.maxTexSize = [newWidth, newHeight];
+
   originalImage = newImageData;
-  ctx.putImageData(newImageData, 0, 0);
+  updateCanvas();
 };
 
 // * ------------------------------ Filters ------------------------------ //
