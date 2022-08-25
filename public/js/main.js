@@ -179,14 +179,20 @@ const updateEdits = (key) => {
       case "sharpness":
         edits.detail.sharpness = parseInt($("#sharpness")[0].value) + 1;
         $("#sharpness-value").text(edits.detail.sharpness - 1);
+        edits.detail.blur = 0;
+        $("#blur-value").text(0);
+        $("#blur").val(0);
+        break;
+
+      case "blur":
+        edits.detail.blur = parseInt($("#blur")[0].value) / 100;
+        $("#blur-value").text(edits.detail.blur);
+        edits.detail.sharpness = 1;
+        $("#sharpness-value").text(0);
+        $("#sharpness").val(0);
         break;
 
       // Effects
-      case "blur":
-        edits.effects.blur = parseInt($("#blur")[0].value) / 100;
-        $("#blur-value").text(edits.effects.blur);
-        break;
-
       case "grain":
         edits.effects.grain = parseInt($("#grain")[0].value);
         $("#grain-value").text(edits.effects.grain);
@@ -247,7 +253,7 @@ const updateCanvas = () => {
   }
 
   // Effects
-  if (edits.effects.blur !== 0) {
+  if (edits.detail.blur !== 0) {
     gpuEdit = "blur";
     gpuImage.src = canvas.toDataURL();
   }
@@ -597,7 +603,7 @@ const imageGrain = () => {
 };
 
 const imageBlur = () => {
-  const blur = edits.effects.blur;
+  const blur = edits.detail.blur;
 
   const kernel = gpu.createKernel(function (image, blur) {
     const width = this.constants.width;
@@ -667,10 +673,9 @@ const resetValues = () => {
     },
     detail: {
       sharpness: 1,
-      noiseReduction: false,
+      blur: 0,
     },
     effects: {
-      blur: 0,
       grain: 0,
     },
   };

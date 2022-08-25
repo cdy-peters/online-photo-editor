@@ -145,6 +145,7 @@
             </div>
 
             <div class="tabcontent" id="detail" hidden>
+                <p style="color: #ff8c8c;">* Sharpness and blur cannot be applied at the same time</p>
                 <div class="input-range">
                     <label for="sharpness">Sharpness</label><br>
                     <div>
@@ -153,9 +154,7 @@
                             oninput="updateEdits('sharpness')">
                     </div>
                 </div>
-            </div>
 
-            <div class="tabcontent" id="effects" hidden>
                 <div class="input-range">
                     <label for="blur">Blur</label><br>
                     <div>
@@ -163,7 +162,9 @@
                         <input type="range" id="blur" min="0" max="100" value="0" oninput="updateEdits('blur')">
                     </div>
                 </div>
+            </div>
 
+            <div class="tabcontent" id="effects" hidden>
                 <div class="input-range">
                     <label for="grain">Grain</label><br>
                     <div>
