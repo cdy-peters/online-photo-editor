@@ -168,6 +168,12 @@ const updateEdits = (key) => {
         $("#tint-value").text(edits.color.tint);
         break;
 
+      // Effects
+      case "grain":
+        edits.effects.grain = parseInt($("#grain")[0].value);
+        $("#grain-value").text(edits.effects.grain);
+        break;
+
       // Detail
       case "sharpness":
         edits.detail.sharpness = parseInt($("#sharpness")[0].value) + 1;
@@ -183,12 +189,6 @@ const updateEdits = (key) => {
         edits.detail.sharpness = 1;
         $("#sharpness-value").text(0);
         $("#sharpness").val(0);
-        break;
-
-      // Effects
-      case "grain":
-        edits.effects.grain = parseInt($("#grain")[0].value);
-        $("#grain-value").text(edits.effects.grain);
         break;
     }
   }
@@ -231,6 +231,11 @@ const updateCanvas = () => {
     imageTint();
   }
 
+  // Effects
+  if (edits.effects.grain !== 0) {
+    imageGrain();
+  }
+
   // Detail
   if (edits.detail.sharpness !== 1) {
     gpuImage.src = canvas.toDataURL();
@@ -238,11 +243,6 @@ const updateCanvas = () => {
 
   if (edits.detail.blur !== 0) {
     gpuImage.src = canvas.toDataURL();
-  }
-
-  // Effects
-  if (edits.effects.grain !== 0) {
-    imageGrain();
   }
 };
 
@@ -564,21 +564,29 @@ const imageSharpness = () => {
 const imageGrain = () => {
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
-  const originalData = originalImage.data;
 
-  const grain = edits.effects.grain * 15;
+  const newData = new Uint8ClampedArray(data.length);
+  const newImageData = new ImageData(newData, canvas.width, canvas.height);
+
+  const grain = edits.effects.grain * 5;
 
   var number;
   for (let i = 0; i < data.length; i += 4) {
     number = Math.floor(Math.random() * 100);
     if (number < 50) {
-      data[i + 3] = originalData[i + 3] - grain;
+      newData[i] = data[i] + grain;
+      newData[i + 1] = data[i + 1] + grain;
+      newData[i + 2] = data[i + 2] + grain;
+      newData[i + 3] = data[i + 3];
     } else {
-      data[i + 3] = 255;
+      newData[i] = data[i];
+      newData[i + 1] = data[i + 1];
+      newData[i + 2] = data[i + 2];
+      newData[i + 3] = data[i + 3];
     }
   }
 
-  ctx.putImageData(imageData, 0, 0);
+  ctx.putImageData(newImageData, 0, 0);
 };
 
 const imageBlur = () => {
