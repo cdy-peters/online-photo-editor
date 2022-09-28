@@ -1,6 +1,5 @@
 {
     "version": 2,
-    "name": "online-photo-editor",
     "builds": [
        { "src": "index.js", "use": "@vercel/node" }
     ],
