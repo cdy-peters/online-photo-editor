@@ -8,6 +8,10 @@ app.get("/", (req, res) => {
   res.sendFile(__dirname + "/views/index.html");
 });
 
+app.get("/noscript", (req, res) => {
+  res.sendFile(__dirname + "/views/noscript.html");
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
