@@ -236,11 +236,11 @@ const updateCanvas = () => {
     gpuImage.src = canvas.toDataURL();
   }
 
-  // Effects
   if (edits.detail.blur !== 0) {
     gpuImage.src = canvas.toDataURL();
   }
 
+  // Effects
   if (edits.effects.grain !== 0) {
     imageGrain();
   }
@@ -566,7 +566,7 @@ const imageGrain = () => {
   const data = imageData.data;
   const originalData = originalImage.data;
 
-  const grain = edits.effects.grain;
+  const grain = edits.effects.grain * 15;
 
   var number;
   for (let i = 0; i < data.length; i += 4) {
