@@ -178,8 +178,8 @@ const updateEdits = (key) => {
         break;
 
       case "blur":
-        edits.detail.blur = parseInt($("#blur")[0].value) / 100;
-        $("#blur-value").text(edits.detail.blur);
+        edits.detail.blur = parseInt($("#blur")[0].value) / 10;
+        $("#blur-value").text(edits.detail.blur * 10);
         edits.detail.sharpness = 1;
         $("#sharpness-value").text(0);
         $("#sharpness").val(0);
@@ -584,7 +584,8 @@ const imageGrain = () => {
 const imageBlur = () => {
   const blur = edits.detail.blur;
 
-  const kernel = gpu.createKernel(function (image, blur) {
+  const kernel = gpu.createKernel(
+    `function (image, blur) {
     const width = this.constants.width;
     const height = this.constants.height;
 
@@ -624,7 +625,9 @@ const imageBlur = () => {
     var blue = pixel[2] + (blueSum - pixel[2]) * blur;
 
     this.color(red, green, blue);
-  }, settings);
+  }`,
+    settings
+  );
 
   kernel(gpuImage, blur);
   image.src = kernel.canvas.toDataURL();
@@ -705,7 +708,8 @@ const truncateRGB = (value) => {
 };
 
 const imageKernel = (matrix) => {
-  const kernel = gpu.createKernel(function (image, matrix) {
+  const kernel = gpu.createKernel(
+    `function (image, matrix) {
     const width = this.constants.width;
     const height = this.constants.height;
 
@@ -734,7 +738,9 @@ const imageKernel = (matrix) => {
     }
 
     this.color(redSum, greenSum, blueSum);
-  }, settings);
+  }`,
+    settings
+  );
 
   kernel(gpuImage, matrix);
   image.src = kernel.canvas.toDataURL();
