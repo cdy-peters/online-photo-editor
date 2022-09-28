@@ -58,13 +58,13 @@ const dropHandler = (e) => {
 const dragOverHandler = (e) => {
   e.preventDefault();
   e.stopPropagation();
-  $("#imageDropzone").css("background-color", "#b3b3b3");
+  $("#imageDropzone").css("background-color", "#515151");
 };
 
 const dragLeaveHandler = (e) => {
   e.preventDefault();
   e.stopPropagation();
-  $("#imageDropzone").css("background-color", "#7b7b7b");
+  $("#imageDropzone").css("background-color", "#373737");
 };
 
 // Read File

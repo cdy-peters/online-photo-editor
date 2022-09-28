@@ -60,7 +60,7 @@ html {
 }
 
 #imageDropzone {
-  background-color: #7b7b7b;
+  background-color: #373737;
   width: 250px;
   height: 150px;
   margin: 0 auto;
@@ -217,6 +217,12 @@ footer {
   align-items: center;
   justify-content: space-between;
   padding: 10px 20px;
+}
+
+#footer-title p {
+  font-size: 1.17em;
+  font-weight: bold;
+  margin: 0;
 }
 
 #copyright {
