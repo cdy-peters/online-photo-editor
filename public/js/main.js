@@ -143,15 +143,17 @@ const updateEdits = (key) => {
       // Light
       case "exposure":
         edits.light.exposure = (parseInt($("#exposure")[0].value) * 3) / 100;
-        $("#exposure-value").text(edits.light.exposure);
+        $("#exposure-value").text(
+          ((edits.light.exposure / 3) * 100).toFixed(0)
+        );
         break;
       case "contrast":
         edits.light.contrast = parseInt($("#contrast")[0].value);
         $("#contrast-value").text(edits.light.contrast);
         break;
       case "gamma":
-        edits.light.gamma = (parseInt($("#gamma")[0].value) + 150) / 100;
-        $("#gamma-value").text((edits.light.gamma - 1.5).toFixed(2));
+        edits.light.gamma = ((parseInt($("#gamma")[0].value) + 100) / 100);
+        $("#gamma-value").text(((edits.light.gamma - 1) * 100).toFixed(0));
         break;
 
       // Color
