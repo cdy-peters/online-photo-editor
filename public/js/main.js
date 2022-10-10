@@ -218,7 +218,7 @@ const updateCanvas = () => {
   if (edits.light.contrast !== 0) {
     imageContrast();
   }
-  if (edits.light.gamma !== 1.5) {
+  if (edits.light.gamma !== 1) {
     imageGamma();
   }
 
@@ -654,7 +654,7 @@ const resetValues = () => {
     light: {
       exposure: 0,
       contrast: 0,
-      gamma: 1.5,
+      gamma: 1,
     },
     color: {
       saturation: 0,
