@@ -1,5 +1,7 @@
 const canvas = $("#canvas")[0];
-const ctx = canvas.getContext("2d");
+const ctx = canvas.getContext("2d", {
+  willReadFrequently: true,
+});
 const image = new Image();
 
 var originalImage;
@@ -7,7 +9,9 @@ var imageName;
 var edits;
 
 const gpuCanvas = $("#gpuCanvas")[0];
-const gpuCtx = gpuCanvas.getContext("2d");
+const gpuCtx = gpuCanvas.getContext("2d", {
+  willReadFrequently: true,
+});
 const gpuImage = new Image();
 const gpu = new GPU({
   gpuCanvas,
