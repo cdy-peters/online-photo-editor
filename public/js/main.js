@@ -3,6 +3,8 @@ const image = new Image();
 class InitEdits {
   constructor() {
     this.exposure = 0;
+    this.contrast = 0;
+    this.gamma = 0;
   }
 }
 
@@ -70,6 +72,12 @@ const readFile = (file) => {
 const initValues = () => {
   $("#exposure").val(edits.exposure);
   $("#exposure-value").text(edits.exposure);
+
+  $("#contrast").val(edits.contrast);
+  $("#contrast-value").text(edits.contrast);
+
+  $("#gamma").val(edits.gamma);
+  $("#gamma-value").text(edits.gamma);
 };
 
 // Tabs

@@ -32,6 +32,8 @@ const fsSource = `
   uniform sampler2D u_image;
   uniform vec2 u_textureSize;
   uniform float u_exposure;
+  uniform float u_contrast;
+  uniform float u_gamma;
   
   // the texCoords passed in from the vertex shader.
   varying vec2 v_texCoord;
@@ -39,9 +41,19 @@ const fsSource = `
   vec3 adjustExposure(vec3 color, float exposure) {
     return color * pow(2.0, exposure);
   }
+
+  vec3 adjustContrast(vec3 color, float contrast) {
+    return (color - 0.5) * contrast + 0.5;
+  }
+
+  vec3 adjustGamma(vec3 color, float gamma) {
+    return pow(color, vec3(1.0 / gamma));
+  }
   
   void main() {
     vec4 color = texture2D(u_image, v_texCoord);
     color.rgb = adjustExposure(color.rgb, u_exposure);
+    color.rgb = adjustContrast(color.rgb, u_contrast + 1.0);
+    color.rgb = adjustGamma(color.rgb, u_gamma + 1.0);
     gl_FragColor = color;
   }`;

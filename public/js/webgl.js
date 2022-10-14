@@ -65,7 +65,7 @@ const render = (image) => {
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 
   // lookup uniforms
-  var resolutionLocation, textureSizeLocation, exposureLocation;
+  var resolutionLocation, textureSizeLocation, exposureLocation, contrastLocation, gammaLocation;
   lookupUniforms();
 
   drawCanvas();
@@ -156,6 +156,8 @@ const render = (image) => {
 
       // Edits
       gl.uniform1f(exposureLocation, edits.exposure);
+      gl.uniform1f(contrastLocation, edits.contrast);
+      gl.uniform1f(gammaLocation, edits.gamma);
     }
 
     // Download image
@@ -177,6 +179,8 @@ const render = (image) => {
 
     // Edits
     exposureLocation = gl.getUniformLocation(program, "u_exposure");
+    contrastLocation = gl.getUniformLocation(program, "u_contrast");
+    gammaLocation = gl.getUniformLocation(program, "u_gamma");
   }
 };
 
@@ -197,6 +201,18 @@ function editImage(drawCanvas) {
   $("#exposure").on("input", (e) => {
     edits.exposure = e.target.value;
     $("#exposure-value").text(e.target.value);
+    drawCanvas();
+  });
+
+  $("#contrast").on("input", (e) => {
+    edits.contrast = e.target.value;
+    $("#contrast-value").text(e.target.value);
+    drawCanvas();
+  });
+
+  $("#gamma").on("input", (e) => {
+    edits.gamma = e.target.value;
+    $("#gamma-value").text(e.target.value);
     drawCanvas();
   });
 }
