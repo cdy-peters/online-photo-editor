@@ -17,8 +17,6 @@
 
     <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png">
 
-    <script src="https://unpkg.com/gpu.js@latest/dist/gpu-browser.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gpu.js@latest/dist/gpu-browser.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.1.min.js"
         integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
 
@@ -31,26 +29,24 @@
         <h1 id="title">Online Photo Editor</h1>
 
         <div id="imageActions">
-            <button id="downloadButton" onclick="download()" disabled>Download</button>
-            <button id="resetButton" onclick="reset()" disabled>Reset</button>
-            <input type="file" id="selectFile" onchange="selectFile(this)" style="display: none;" />
-            <button id="uploadButton" onclick="document.getElementById('selectFile').click()">Upload</button>
+            <button id="downloadButton" disabled>Download</button>
+            <button id="resetButton" disabled>Reset</button>
+            <input type="file" id="selectFile" accept="image/*" style="display: none;" />
+            <button id="uploadButton" onclick="$('#selectFile').click()">Upload</button>
         </div>
 
-        <div id="imageDropzone" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)"
-            ondragleave="dragLeaveHandler(event)">
+        <div id="imageDropzone">
             <div id="imageDropzoneInner">
                 <p>Drag and drop an image or select an image via the new image button</p>
             </div>
         </div>
+
         <div id="canvasContainer" hidden>
             <canvas id="canvas"></canvas>
-            <canvas id="gpuCanvas" style="display: none;"></canvas>
         </div>
         <br>
 
         <div id="editOptions" hidden>
-
             <!-- Tabs -->
             <div id="tab">
                 <button id="adjust-tab" class="tablinks btn-active" onclick="openTab(event, 'adjust')">Adjust</button>
@@ -99,8 +95,7 @@
                     <label for="exposure">Exposure</label><br>
                     <div>
                         <p id="exposure-value">0</p>
-                        <input type="range" id="exposure" min="-100" max="100" value="0"
-                            oninput="updateEdits('exposure')">
+                        <input type="range" id="exposure" min="-1" max="1" step="0.01" value="0">
                     </div>
                 </div>
 
@@ -182,6 +177,8 @@
         </div>
 
         <script src="js/main.min.js"></script>
+        <script src="js/shaders.min.js"></script>
+        <script src="js/webgl.min.js"></script>
     </body>
 
     <footer>
