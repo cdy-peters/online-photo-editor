@@ -2,6 +2,8 @@ const image = new Image();
 
 class InitEdits {
   constructor() {
+    this.mirror = 1;
+    this.reflect = -1;
     this.exposure = 0;
     this.contrast = 0;
     this.gamma = 0;

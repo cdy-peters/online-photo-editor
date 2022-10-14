@@ -64,8 +64,10 @@ const render = (image) => {
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 
   // lookup uniforms
-  var resolutionLocation,
-    textureSizeLocation,
+  var resolutionLocation, textureSizeLocation;
+
+  var mirrorLocation,
+    reflectLocation,
     exposureLocation,
     contrastLocation,
     gammaLocation,
@@ -161,6 +163,8 @@ const render = (image) => {
       gl.uniform2f(textureSizeLocation, image.width, image.height);
 
       // Edits
+      gl.uniform1f(mirrorLocation, edits.mirror);
+      gl.uniform1f(reflectLocation, edits.reflect);
       gl.uniform1f(exposureLocation, edits.exposure);
       gl.uniform1f(contrastLocation, edits.contrast);
       gl.uniform1f(gammaLocation, edits.gamma);
@@ -187,6 +191,8 @@ const render = (image) => {
     textureSizeLocation = gl.getUniformLocation(program, "u_textureSize");
 
     // Edits
+    mirrorLocation = gl.getUniformLocation(program, "u_mirror");
+    reflectLocation = gl.getUniformLocation(program, "u_reflect");
     exposureLocation = gl.getUniformLocation(program, "u_exposure");
     contrastLocation = gl.getUniformLocation(program, "u_contrast");
     gammaLocation = gl.getUniformLocation(program, "u_gamma");
@@ -210,6 +216,16 @@ const setRectangle = (gl, x, y, width, height) => {
 
 // Edit image
 function editImage(drawCanvas) {
+  $("#mirror").on("click", () => {
+    edits.mirror = -edits.mirror;
+    drawCanvas();
+  });
+
+  $("#reflect").on("click", () => {
+    edits.reflect = -edits.reflect;
+    drawCanvas();
+  });
+
   $("#exposure").on("input", (e) => {
     edits.exposure = e.target.value;
     $("#exposure-value").text(e.target.value);
