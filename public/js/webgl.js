@@ -109,13 +109,6 @@ const render = (image) => {
   //   drawEffects();
   // });
 
-  function computeKernelWeight(kernel) {
-    var weight = kernel.reduce(function (prev, curr) {
-      return prev + curr;
-    });
-    return weight <= 0 ? 1 : weight;
-  }
-
   function drawEffects() {
     // Clear the canvas
     gl.clearColor(0, 0, 0, 0);
@@ -223,6 +216,7 @@ const render = (image) => {
   function drawCanvas(name) {
     // set the kernel and it's weight
     var kernel;
+    var kernelWeight = 1;
     if (name === "normal") {
       kernel = [0, 0, 0, 0, 1, 0, 0, 0, 0];
     } else if (name === "sharpness") {
@@ -240,9 +234,10 @@ const render = (image) => {
       ];
     } else if (name === "blur") {
       kernel = [0.111, 0.111, 0.111, 0.111, 0.111, 0.111, 0.111, 0.111, 0.111]
+      kernelWeight = 0.999;
     }
     gl.uniform1fv(kernelLocation, kernel);
-    gl.uniform1f(kernelWeightLocation, computeKernelWeight(kernel));
+    gl.uniform1f(kernelWeightLocation, kernelWeight);
 
     setUniforms();
 
