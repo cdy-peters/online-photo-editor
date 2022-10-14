@@ -5,6 +5,9 @@ class InitEdits {
     this.exposure = 0;
     this.contrast = 0;
     this.gamma = 0;
+    this.saturation = 0;
+    this.temperature = 0;
+    this.tint = 0;
   }
 }
 
@@ -78,6 +81,15 @@ const initValues = () => {
 
   $("#gamma").val(edits.gamma);
   $("#gamma-value").text(edits.gamma);
+
+  $("#saturation").val(edits.saturation);
+  $("#saturation-value").text(edits.saturation);
+
+  $("#temperature").val(edits.temperature);
+  $("#temperature-value").text(edits.temperature);
+
+  $("#tint").val(edits.tint);
+  $("#tint-value").text(edits.tint);
 };
 
 // Tabs

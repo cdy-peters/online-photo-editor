@@ -28,7 +28,6 @@ const render = (image) => {
   gl.attachShader(program, fragmentShader);
   gl.linkProgram(program);
 
-
   // look up where the vertex data needs to go.
   var positionLocation = gl.getAttribLocation(program, "a_position");
   var texcoordLocation = gl.getAttribLocation(program, "a_texCoord");
@@ -65,7 +64,14 @@ const render = (image) => {
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 
   // lookup uniforms
-  var resolutionLocation, textureSizeLocation, exposureLocation, contrastLocation, gammaLocation;
+  var resolutionLocation,
+    textureSizeLocation,
+    exposureLocation,
+    contrastLocation,
+    gammaLocation,
+    saturationLocation,
+    temperatureLocation,
+    tintLocation;
   lookupUniforms();
 
   drawCanvas();
@@ -158,6 +164,9 @@ const render = (image) => {
       gl.uniform1f(exposureLocation, edits.exposure);
       gl.uniform1f(contrastLocation, edits.contrast);
       gl.uniform1f(gammaLocation, edits.gamma);
+      gl.uniform1f(saturationLocation, edits.saturation);
+      gl.uniform1f(temperatureLocation, edits.temperature);
+      gl.uniform1f(tintLocation, edits.tint);
     }
 
     // Download image
@@ -181,6 +190,9 @@ const render = (image) => {
     exposureLocation = gl.getUniformLocation(program, "u_exposure");
     contrastLocation = gl.getUniformLocation(program, "u_contrast");
     gammaLocation = gl.getUniformLocation(program, "u_gamma");
+    saturationLocation = gl.getUniformLocation(program, "u_saturation");
+    temperatureLocation = gl.getUniformLocation(program, "u_temperature");
+    tintLocation = gl.getUniformLocation(program, "u_tint");
   }
 };
 
@@ -213,6 +225,24 @@ function editImage(drawCanvas) {
   $("#gamma").on("input", (e) => {
     edits.gamma = e.target.value;
     $("#gamma-value").text(e.target.value);
+    drawCanvas();
+  });
+
+  $("#saturation").on("input", (e) => {
+    edits.saturation = e.target.value;
+    $("#saturation-value").text(e.target.value);
+    drawCanvas();
+  });
+
+  $("#temperature").on("input", (e) => {
+    edits.temperature = e.target.value;
+    $("#temperature-value").text(e.target.value);
+    drawCanvas();
+  });
+
+  $("#tint").on("input", (e) => {
+    edits.tint = e.target.value;
+    $("#tint-value").text(e.target.value);
     drawCanvas();
   });
 }
