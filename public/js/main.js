@@ -2,14 +2,23 @@ const image = new Image();
 
 class InitEdits {
   constructor() {
+    // Adjust
     this.mirror = 1;
     this.reflect = -1;
+
+    // Light
     this.exposure = 0;
     this.contrast = 0;
     this.gamma = 0;
+
+    // Color
     this.saturation = 0;
     this.temperature = 0;
     this.tint = 0;
+
+    // Detail
+    this.sharpness = 0;
+    this.blur = 0;
   }
 }
 
@@ -75,6 +84,7 @@ const readFile = (file) => {
 };
 
 const initValues = () => {
+  // Light
   $("#exposure").val(edits.exposure);
   $("#exposure-value").text(edits.exposure);
 
@@ -84,6 +94,7 @@ const initValues = () => {
   $("#gamma").val(edits.gamma);
   $("#gamma-value").text(edits.gamma);
 
+  // Color
   $("#saturation").val(edits.saturation);
   $("#saturation-value").text(edits.saturation);
 
@@ -92,6 +103,13 @@ const initValues = () => {
 
   $("#tint").val(edits.tint);
   $("#tint-value").text(edits.tint);
+
+  // Detail
+  $("#sharpness").val(edits.sharpness);
+  $("#sharpness-value").text(edits.sharpness);
+
+  $("#blur").val(edits.blur);
+  $("#blur-value").text(edits.blur);
 };
 
 // Tabs

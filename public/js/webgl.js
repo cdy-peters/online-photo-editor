@@ -1,5 +1,17 @@
 "use strict";
 
+// Init uniforms
+var resolutionLocation, textureSizeLocation;
+var mirrorLocation,
+  reflectLocation,
+  exposureLocation,
+  contrastLocation,
+  gammaLocation,
+  saturationLocation,
+  temperatureLocation,
+  tintLocation;
+var kernelLocation, kernelWeightLocation;
+
 var capture = false;
 
 const render = (image) => {
@@ -15,18 +27,7 @@ const render = (image) => {
   canvas.height = image.height;
 
   // setup GLSL program
-  const vertexShader = gl.createShader(gl.VERTEX_SHADER);
-  gl.shaderSource(vertexShader, vsSource);
-  gl.compileShader(vertexShader);
-
-  const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-  gl.shaderSource(fragmentShader, fsSource);
-  gl.compileShader(fragmentShader);
-
-  const program = gl.createProgram();
-  gl.attachShader(program, vertexShader);
-  gl.attachShader(program, fragmentShader);
-  gl.linkProgram(program);
+  const program = createProgramFromScripts(gl, vsSource, fsSource);
 
   // look up where the vertex data needs to go.
   var positionLocation = gl.getAttribLocation(program, "a_position");
@@ -34,7 +35,7 @@ const render = (image) => {
 
   // Create a buffer to put three 2d clip space points in
   var positionBuffer = gl.createBuffer();
-  // Bind it to ARRAY_BUFFER (think of it as ARRAY_BUFFER = positionBuffer)
+  // Bind it to ARRAY_BUFFER
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
   // Set a rectangle the same size as the image.
   setRectangle(gl, 0, 0, image.width, image.height);
@@ -50,55 +51,72 @@ const render = (image) => {
     gl.STATIC_DRAW
   );
 
-  // Create a texture.
-  var texture = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, texture);
-
-  // Set the parameters so we can render any size image.
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-
   // Upload the image into the texture.
+  var originalImageTexture = createAndSetTexture(gl);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 
-  // lookup uniforms
-  var resolutionLocation, textureSizeLocation;
+  // Create 2 textures with framebuffer
+  var textures = [],
+    framebuffers = [];
+  for (var i = 0; i < 2; ++i) {
+    var texture = createAndSetTexture(gl);
+    textures.push(texture);
 
-  var mirrorLocation,
-    reflectLocation,
-    exposureLocation,
-    contrastLocation,
-    gammaLocation,
-    saturationLocation,
-    temperatureLocation,
-    tintLocation;
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      image.width,
+      image.height,
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      null
+    );
+
+    var fbo = gl.createFramebuffer();
+    framebuffers.push(fbo);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+
+    gl.framebufferTexture2D(
+      gl.FRAMEBUFFER,
+      gl.COLOR_ATTACHMENT0,
+      gl.TEXTURE_2D,
+      texture,
+      0
+    );
+  }
+
+  // lookup uniforms
   lookupUniforms();
 
-  drawCanvas();
+  drawEffects();
 
   // Edit image
-  editImage(drawCanvas);
+  editImage(drawEffects);
 
   // Reset image
   $("#resetButton").on("click", () => {
     edits = new InitEdits();
     initValues();
 
-    drawCanvas();
+    drawEffects();
   });
 
-  // Download image
-  $("#downloadButton").on("click", () => {
-    capture = true;
-    drawCanvas();
-  });
+  // // Download image
+  // $("#downloadButton").on("click", () => {
+  //   capture = true;
+  //   drawEffects();
+  // });
 
-  function drawCanvas() {
-    // Tell WebGL how to convert from clip space to pixels
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+  function computeKernelWeight(kernel) {
+    var weight = kernel.reduce(function (prev, curr) {
+      return prev + curr;
+    });
+    return weight <= 0 ? 1 : weight;
+  }
 
+  function drawEffects() {
     // Clear the canvas
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -134,11 +152,11 @@ const render = (image) => {
     gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
 
     // Tell the texcoord attribute how to get data out of texcoordBuffer (ARRAY_BUFFER)
-    var size = 2; // 2 components per iteration
-    var type = gl.FLOAT; // the data is 32bit floats
-    var normalize = false; // don't normalize the data
-    var stride = 0; // 0 = move forward size * sizeof(type) each iteration to get the next position
-    var offset = 0; // start at the beginning of the buffer
+    var size = 2;
+    var type = gl.FLOAT;
+    var normalize = false;
+    var stride = 0;
+    var offset = 0;
     gl.vertexAttribPointer(
       texcoordLocation,
       size,
@@ -148,7 +166,82 @@ const render = (image) => {
       offset
     );
 
-    // Set uniforms
+    // set the size of the image
+    gl.uniform2f(textureSizeLocation, image.width, image.height);
+
+    // start with the original image
+    gl.bindTexture(gl.TEXTURE_2D, originalImageTexture);
+
+    // don't y flip images while drawing to the textures
+    edits.reflect = -edits.reflect;
+
+    // loop through each effect we want to apply.
+    var count = 0;
+    if (edits.sharpness > 0) {
+      setFramebuffer(framebuffers[0], image.width, image.height);
+      drawCanvas("sharpness");
+      gl.bindTexture(gl.TEXTURE_2D, textures[count % 2]);
+      count++;
+    }
+    if (edits.blur > 0) {
+      setFramebuffer(framebuffers[1], image.width, image.height);
+      drawCanvas("blur");
+      gl.bindTexture(gl.TEXTURE_2D, textures[count % 2]);
+      count++;
+    }
+
+    // finally draw the result to the canvas.
+    edits.reflect = -edits.reflect; // need to y flip for canvas
+    setFramebuffer(null, gl.canvas.width, gl.canvas.height);
+    drawCanvas("normal");
+
+    // // Download image
+    // if (capture) {
+    //   capture = false;
+
+    //   const dataURL = canvas.toDataURL("image/png");
+    //   const link = document.createElement("a");
+    //   link.download = "image.png";
+    //   link.href = dataURL;
+    //   link.click();
+    // }
+  }
+
+  function setFramebuffer(fbo, width, height) {
+    // make this the framebuffer we are rendering to.
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+
+    // Tell the shader the resolution of the framebuffer.
+    gl.uniform2f(resolutionLocation, width, height);
+
+    // Tell webgl the viewport setting needed for framebuffer.
+    gl.viewport(0, 0, width, height);
+  }
+
+  function drawCanvas(name) {
+    // set the kernel and it's weight
+    var kernel;
+    if (name === "normal") {
+      kernel = [0, 0, 0, 0, 1, 0, 0, 0, 0];
+    } else if (name === "sharpness") {
+      var edge = -(edits.sharpness - 1) / 4;
+      kernel = [
+        0,
+        edge,
+        0,
+        edge,
+        parseFloat(edits.sharpness),
+        edge,
+        0,
+        edge,
+        0,
+      ];
+    } else if (name === "blur") {
+      kernel = [0.045, 0.122, 0.045, 0.122, 0.332, 0.122, 0.045, 0.122, 0.045];
+    }
+    gl.uniform1fv(kernelLocation, kernel);
+    gl.uniform1f(kernelWeightLocation, computeKernelWeight(kernel));
+
     setUniforms();
 
     // Draw the rectangle.
@@ -156,33 +249,22 @@ const render = (image) => {
     var offset = 0;
     var count = 6;
     gl.drawArrays(primitiveType, offset, count);
+  }
 
-    // Set uniforms
-    function setUniforms() {
-      gl.uniform2f(resolutionLocation, gl.canvas.width, gl.canvas.height);
-      gl.uniform2f(textureSizeLocation, image.width, image.height);
+  // Set uniforms
+  function setUniforms() {
+    gl.uniform2f(resolutionLocation, gl.canvas.width, gl.canvas.height);
+    gl.uniform2f(textureSizeLocation, image.width, image.height);
 
-      // Edits
-      gl.uniform1f(mirrorLocation, edits.mirror);
-      gl.uniform1f(reflectLocation, edits.reflect);
-      gl.uniform1f(exposureLocation, edits.exposure);
-      gl.uniform1f(contrastLocation, edits.contrast);
-      gl.uniform1f(gammaLocation, edits.gamma);
-      gl.uniform1f(saturationLocation, edits.saturation);
-      gl.uniform1f(temperatureLocation, edits.temperature);
-      gl.uniform1f(tintLocation, edits.tint);
-    }
-
-    // Download image
-    if (capture) {
-      capture = false;
-
-      const dataURL = canvas.toDataURL("image/png");
-      const link = document.createElement("a");
-      link.download = "image.png";
-      link.href = dataURL;
-      link.click();
-    }
+    // Edits
+    gl.uniform1f(mirrorLocation, edits.mirror);
+    gl.uniform1f(reflectLocation, edits.reflect);
+    gl.uniform1f(exposureLocation, edits.exposure);
+    gl.uniform1f(contrastLocation, edits.contrast);
+    gl.uniform1f(gammaLocation, edits.gamma);
+    gl.uniform1f(saturationLocation, edits.saturation);
+    gl.uniform1f(temperatureLocation, edits.temperature);
+    gl.uniform1f(tintLocation, edits.tint);
   }
 
   // Lookup uniforms
@@ -199,6 +281,9 @@ const render = (image) => {
     saturationLocation = gl.getUniformLocation(program, "u_saturation");
     temperatureLocation = gl.getUniformLocation(program, "u_temperature");
     tintLocation = gl.getUniformLocation(program, "u_tint");
+
+    kernelLocation = gl.getUniformLocation(program, "u_kernel[0]");
+    kernelWeightLocation = gl.getUniformLocation(program, "u_kernelWeight");
   }
 };
 
@@ -215,50 +300,66 @@ const setRectangle = (gl, x, y, width, height) => {
 };
 
 // Edit image
-function editImage(drawCanvas) {
+const editImage = (drawEffects) => {
+  // Adjust
   $("#mirror").on("click", () => {
     edits.mirror = -edits.mirror;
-    drawCanvas();
+    drawEffects();
   });
 
   $("#reflect").on("click", () => {
     edits.reflect = -edits.reflect;
-    drawCanvas();
+    drawEffects();
   });
 
+  // Light
   $("#exposure").on("input", (e) => {
     edits.exposure = e.target.value;
     $("#exposure-value").text(e.target.value);
-    drawCanvas();
+    drawEffects();
   });
 
   $("#contrast").on("input", (e) => {
     edits.contrast = e.target.value;
     $("#contrast-value").text(e.target.value);
-    drawCanvas();
+    drawEffects();
   });
 
   $("#gamma").on("input", (e) => {
     edits.gamma = e.target.value;
     $("#gamma-value").text(e.target.value);
-    drawCanvas();
+    drawEffects();
   });
 
+  // Color
   $("#saturation").on("input", (e) => {
     edits.saturation = e.target.value;
     $("#saturation-value").text(e.target.value);
-    drawCanvas();
+    drawEffects();
   });
 
   $("#temperature").on("input", (e) => {
     edits.temperature = e.target.value;
     $("#temperature-value").text(e.target.value);
-    drawCanvas();
+    drawEffects();
   });
 
   $("#tint").on("input", (e) => {
     edits.tint = e.target.value;
     $("#tint-value").text(e.target.value);
-    drawCanvas();
+    drawEffects();
   });
-}
+
+  // Detail
+  $("#sharpness").on("input", (e) => {
+    edits.sharpness = e.target.value;
+    $("#sharpness-value").text(e.target.value);
+    drawEffects();
+  });
+
+  $("#blur").on("input", (e) => {
+    edits.blur = e.target.value;
+    $("#blur-value").text(e.target.value);
+    drawEffects();
+  });
+};

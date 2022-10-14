@@ -33,6 +33,10 @@ const fsSource = `
   // our texture
   uniform sampler2D u_image;
   uniform vec2 u_textureSize;
+
+  uniform float u_kernel[9];
+  uniform float u_kernelWeight;
+
   uniform float u_exposure;
   uniform float u_contrast;
   uniform float u_gamma;
@@ -42,6 +46,22 @@ const fsSource = `
   
   // the texCoords passed in from the vertex shader.
   varying vec2 v_texCoord;
+
+  vec4 convolution(sampler2D image, vec2 uv, vec2 resolution, float kernel[9]) {
+    vec2 onePixel = vec2(1.0, 1.0) / resolution;
+    vec4 colorSum =
+      texture2D(u_image, v_texCoord + onePixel * vec2(-1, -1)) * u_kernel[0] +
+      texture2D(u_image, v_texCoord + onePixel * vec2( 0, -1)) * u_kernel[1] +
+      texture2D(u_image, v_texCoord + onePixel * vec2( 1, -1)) * u_kernel[2] +
+      texture2D(u_image, v_texCoord + onePixel * vec2(-1,  0)) * u_kernel[3] +
+      texture2D(u_image, v_texCoord + onePixel * vec2( 0,  0)) * u_kernel[4] +
+      texture2D(u_image, v_texCoord + onePixel * vec2( 1,  0)) * u_kernel[5] +
+      texture2D(u_image, v_texCoord + onePixel * vec2(-1,  1)) * u_kernel[6] +
+      texture2D(u_image, v_texCoord + onePixel * vec2( 0,  1)) * u_kernel[7] +
+      texture2D(u_image, v_texCoord + onePixel * vec2( 1,  1)) * u_kernel[8] ;
+  
+    return colorSum / u_kernelWeight;
+  }
   
   vec3 adjustExposure(vec3 color, float exposure) {
     return color * pow(2.0, exposure);
@@ -79,11 +99,17 @@ const fsSource = `
   
   void main() {
     vec4 color = texture2D(u_image, v_texCoord);
+    color.rgb = convolution(u_image, v_texCoord, u_textureSize, u_kernel).rgb;
+
+    // Light
     color.rgb = adjustExposure(color.rgb, u_exposure);
     color.rgb = adjustContrast(color.rgb, u_contrast + 1.0);
     color.rgb = adjustGamma(color.rgb, u_gamma + 1.0);
+
+    // Color
     color.rgb = adjustSaturation(color.rgb, u_saturation + 1.0);
     color.rgb = adjustTemperature(color.rgb, u_temperature / 2.0);
     color.rgb = adjustTint(color.rgb, u_tint / 2.0);
+
     gl_FragColor = color;
   }`;
