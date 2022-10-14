@@ -184,10 +184,12 @@ const render = (image) => {
       count++;
     }
     if (edits.blur > 0) {
-      setFramebuffer(framebuffers[1], image.width, image.height);
-      drawCanvas("blur");
-      gl.bindTexture(gl.TEXTURE_2D, textures[count % 2]);
-      count++;
+      for (var i = 0; i < edits.blur; i++) {
+        setFramebuffer(framebuffers[count % 2], image.width, image.height);
+        drawCanvas("blur");
+        gl.bindTexture(gl.TEXTURE_2D, textures[count % 2]);
+        count++;
+      }
     }
 
     // finally draw the result to the canvas.
@@ -237,7 +239,7 @@ const render = (image) => {
         0,
       ];
     } else if (name === "blur") {
-      kernel = [0.045, 0.122, 0.045, 0.122, 0.332, 0.122, 0.045, 0.122, 0.045];
+      kernel = [0.111, 0.111, 0.111, 0.111, 0.111, 0.111, 0.111, 0.111, 0.111]
     }
     gl.uniform1fv(kernelLocation, kernel);
     gl.uniform1f(kernelWeightLocation, computeKernelWeight(kernel));
