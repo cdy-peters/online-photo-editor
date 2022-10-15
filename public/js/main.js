@@ -19,6 +19,9 @@ class InitEdits {
     // Detail
     this.sharpness = 0;
     this.blur = 0;
+
+    // Effects
+    this.vignette = 0;
   }
 }
 
@@ -110,6 +113,10 @@ const initValues = () => {
 
   $("#blur").val(edits.blur);
   $("#blur-value").text(edits.blur);
+
+  // Effects
+  $("#vignette").val(edits.vignette);
+  $("#vignette-value").text(edits.vignette);
 };
 
 // Tabs

@@ -43,6 +43,7 @@ const fsSource = `
   uniform float u_saturation;
   uniform float u_temperature;
   uniform float u_tint;
+  uniform float u_vignette;
   
   // the texCoords passed in from the vertex shader.
   varying vec2 v_texCoord;
@@ -96,6 +97,15 @@ const fsSource = `
     retColor.b = color.b;
     return clamp(retColor, 0.0, 1.0);
   }
+
+  vec3 applyVignette(vec3 color, float vignette) {
+    vec2 uv = v_texCoord;
+    vec2 texel = vec2(1.0, 1.0) / u_textureSize;
+    vec2 center = vec2(0.5, 0.5);
+    vec2 dist = uv - center;
+    float percent = 1.0 - (length(dist) * vignette);
+    return color * percent;
+  }
   
   void main() {
     vec4 color = texture2D(u_image, v_texCoord);
@@ -110,6 +120,9 @@ const fsSource = `
     color.rgb = adjustSaturation(color.rgb, u_saturation + 1.0);
     color.rgb = adjustTemperature(color.rgb, u_temperature / 2.0);
     color.rgb = adjustTint(color.rgb, u_tint / 2.0);
+
+    // Effects
+    color.rgb = applyVignette(color.rgb, u_vignette);
 
     gl_FragColor = color;
   }`;

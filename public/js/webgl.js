@@ -9,7 +9,8 @@ var mirrorLocation,
   gammaLocation,
   saturationLocation,
   temperatureLocation,
-  tintLocation;
+  tintLocation,
+  vignetteLocation;
 var kernelLocation, kernelWeightLocation;
 
 var capture = false;
@@ -262,6 +263,7 @@ const render = (image) => {
     gl.uniform1f(saturationLocation, edits.saturation);
     gl.uniform1f(temperatureLocation, edits.temperature);
     gl.uniform1f(tintLocation, edits.tint);
+    gl.uniform1f(vignetteLocation, edits.vignette);
   }
 
   // Lookup uniforms
@@ -278,6 +280,7 @@ const render = (image) => {
     saturationLocation = gl.getUniformLocation(program, "u_saturation");
     temperatureLocation = gl.getUniformLocation(program, "u_temperature");
     tintLocation = gl.getUniformLocation(program, "u_tint");
+    vignetteLocation = gl.getUniformLocation(program, "u_vignette");
 
     kernelLocation = gl.getUniformLocation(program, "u_kernel[0]");
     kernelWeightLocation = gl.getUniformLocation(program, "u_kernelWeight");
@@ -357,6 +360,13 @@ const editImage = (drawEffects) => {
   $("#blur").on("input", (e) => {
     edits.blur = e.target.value;
     $("#blur-value").text(e.target.value);
+    drawEffects();
+  });
+
+  // Effects
+  $("#vignette").on("input", (e) => {
+    edits.vignette = e.target.value;
+    $("#vignette-value").text(e.target.value);
     drawEffects();
   });
 };
