@@ -13,6 +13,9 @@ var mirrorLocation,
   vignetteLocation;
 var kernelLocation, kernelWeightLocation;
 
+var tempReflect = 1,
+  tempMirror = 1;
+
 var capture = false;
 
 const render = (image) => {
@@ -167,7 +170,8 @@ const render = (image) => {
     gl.bindTexture(gl.TEXTURE_2D, originalImageTexture);
 
     // don't y flip images while drawing to the textures
-    edits.reflect = -edits.reflect;
+    edits.reflect = 1;
+    edits.mirror = 1;
 
     // loop through each effect we want to apply.
     var count = 0;
@@ -187,7 +191,8 @@ const render = (image) => {
     }
 
     // finally draw the result to the canvas.
-    edits.reflect = -edits.reflect; // need to y flip for canvas
+    edits.reflect = -tempReflect; // need to y flip for canvas
+    edits.mirror = -tempMirror;
     setFramebuffer(null, gl.canvas.width, gl.canvas.height);
     drawCanvas("normal");
 
@@ -234,7 +239,7 @@ const render = (image) => {
         0,
       ];
     } else if (name === "blur") {
-      kernel = [0.111, 0.111, 0.111, 0.111, 0.111, 0.111, 0.111, 0.111, 0.111]
+      kernel = [0.111, 0.111, 0.111, 0.111, 0.111, 0.111, 0.111, 0.111, 0.111];
       kernelWeight = 0.999;
     }
     gl.uniform1fv(kernelLocation, kernel);
@@ -303,11 +308,13 @@ const setRectangle = (gl, x, y, width, height) => {
 const editImage = (drawEffects) => {
   // Adjust
   $("#mirror").on("click", () => {
+    tempMirror = edits.mirror;
     edits.mirror = -edits.mirror;
     drawEffects();
   });
 
   $("#reflect").on("click", () => {
+    tempReflect = edits.reflect;
     edits.reflect = -edits.reflect;
     drawEffects();
   });
