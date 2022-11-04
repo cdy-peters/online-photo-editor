@@ -4,6 +4,9 @@
 var resolutionLocation, textureSizeLocation;
 var mirrorLocation,
   reflectLocation,
+  grayscaleLocation,
+  sepiaLocation,
+  invertLocation,
   exposureLocation,
   contrastLocation,
   gammaLocation,
@@ -263,6 +266,9 @@ const render = (image) => {
     // Edits
     gl.uniform1f(mirrorLocation, edits.mirror);
     gl.uniform1f(reflectLocation, edits.reflect);
+    gl.uniform1f(grayscaleLocation, edits.grayscale);
+    gl.uniform1f(sepiaLocation, edits.sepia);
+    gl.uniform1f(invertLocation, edits.invert);
     gl.uniform1f(exposureLocation, edits.exposure);
     gl.uniform1f(contrastLocation, edits.contrast);
     gl.uniform1f(gammaLocation, edits.gamma);
@@ -280,6 +286,9 @@ const render = (image) => {
     // Edits
     mirrorLocation = gl.getUniformLocation(program, "u_mirror");
     reflectLocation = gl.getUniformLocation(program, "u_reflect");
+    grayscaleLocation = gl.getUniformLocation(program, "u_grayscale");
+    sepiaLocation = gl.getUniformLocation(program, "u_sepia");
+    invertLocation = gl.getUniformLocation(program, "u_invert");
     exposureLocation = gl.getUniformLocation(program, "u_exposure");
     contrastLocation = gl.getUniformLocation(program, "u_contrast");
     gammaLocation = gl.getUniformLocation(program, "u_gamma");
@@ -305,6 +314,8 @@ const setRectangle = (gl, x, y, width, height) => {
   );
 };
 
+var prevFilter;
+
 // Edit image
 const editImage = (drawEffects) => {
   // Adjust
@@ -317,6 +328,25 @@ const editImage = (drawEffects) => {
   $("#reflect").on("click", () => {
     tempReflect = edits.reflect;
     edits.reflect = -edits.reflect;
+    drawEffects();
+  });
+
+  // Filters
+  $("#filters > button").on("click", (e) => {
+    if (prevFilter) {
+      edits[prevFilter] = false;
+      $(`#${prevFilter}`).removeClass("active-filter");
+    }
+
+    const id = e.target.id;
+    if (prevFilter === id) {
+      prevFilter = null;
+    } else {
+      edits[id] = !edits[id];
+      prevFilter = id;
+      $(`#${id}`).addClass("active-filter");
+    }
+
     drawEffects();
   });
 

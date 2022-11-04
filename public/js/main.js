@@ -6,6 +6,11 @@ class InitEdits {
     this.mirror = 1;
     this.reflect = -1;
 
+    // Filters
+    this.grayscale = false;
+    this.sepia = false;
+    this.invert = false;
+
     // Light
     this.exposure = 0;
     this.contrast = 0;

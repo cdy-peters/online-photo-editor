@@ -39,6 +39,9 @@ const fsSource = `
 
   uniform float u_exposure;
   uniform float u_contrast;
+  uniform bool u_grayscale;
+  uniform bool u_sepia;
+  uniform bool u_invert;
   uniform float u_gamma;
   uniform float u_saturation;
   uniform float u_temperature;
@@ -62,6 +65,24 @@ const fsSource = `
       texture2D(u_image, v_texCoord + onePixel * vec2( 1,  1)) * u_kernel[8] ;
   
     return colorSum / u_kernelWeight;
+  }
+
+  vec3 grayscaleFilter(vec3 color) {
+    float average = (color.r + color.g + color.b) / 3.0;
+    return vec3(average, average, average);
+  }
+
+  vec3 sepiaFilter(vec3 color) {
+    vec3 sepia = vec3(
+      dot(color, vec3(0.393, 0.769, 0.189)),
+      dot(color, vec3(0.349, 0.686, 0.168)),
+      dot(color, vec3(0.272, 0.534, 0.131))
+    );
+    return sepia;
+  }
+
+  vec3 invertFilter(vec3 color) {
+    return vec3(1.0) - color;
   }
   
   vec3 adjustExposure(vec3 color, float exposure) {
@@ -110,6 +131,18 @@ const fsSource = `
   void main() {
     vec4 color = texture2D(u_image, v_texCoord);
     color.rgb = convolution(u_image, v_texCoord, u_textureSize, u_kernel).rgb;
+
+    if (u_grayscale) {
+      color.rgb = grayscaleFilter(color.rgb);
+    }
+
+    if (u_sepia) {
+      color.rgb = sepiaFilter(color.rgb);
+    }
+
+    if (u_invert) {
+      color.rgb = invertFilter(color.rgb);
+    }
 
     // Light
     color.rgb = adjustExposure(color.rgb, u_exposure);

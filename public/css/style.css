@@ -158,6 +158,11 @@ canvas {
   color: white;
 }
 
+.active-filter {
+  background-color: #b3b3b3 !important;
+  color: white;
+}
+
 .input-range {
   margin: 8px;
 }
