@@ -108,11 +108,11 @@ const render = (image) => {
     drawEffects();
   });
 
-  // // Download image
-  // $("#downloadButton").on("click", () => {
-  //   capture = true;
-  //   drawEffects();
-  // });
+  // Download image
+  $("#downloadButton").on("click", () => {
+    capture = true;
+    drawEffects();
+  });
 
   function drawEffects() {
     // Clear the canvas
@@ -197,16 +197,16 @@ const render = (image) => {
     setFramebuffer(null, gl.canvas.width, gl.canvas.height);
     drawCanvas("normal");
 
-    // // Download image
-    // if (capture) {
-    //   capture = false;
+    // Download image
+    if (capture) {
+      capture = false;
 
-    //   const dataURL = canvas.toDataURL("image/png");
-    //   const link = document.createElement("a");
-    //   link.download = "image.png";
-    //   link.href = dataURL;
-    //   link.click();
-    // }
+      const dataURL = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.download = "image.png";
+      link.href = dataURL;
+      link.click();
+    }
   }
 
   function setFramebuffer(fbo, width, height) {
