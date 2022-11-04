@@ -102,6 +102,7 @@ const render = (image) => {
   // Reset image
   $("#resetButton").on("click", () => {
     edits = new InitEdits();
+    tempReflect = tempMirror = 1;
     initValues();
 
     drawEffects();
