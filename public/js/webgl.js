@@ -4,6 +4,9 @@
 var resolutionLocation, textureSizeLocation;
 var mirrorLocation,
   reflectLocation,
+  rotationLocation,
+  translationLocation,
+  scaleLocation,
   grayscaleLocation,
   sepiaLocation,
   invertLocation,
@@ -266,6 +269,9 @@ const render = (image) => {
     // Edits
     gl.uniform1f(mirrorLocation, edits.mirror);
     gl.uniform1f(reflectLocation, edits.reflect);
+    gl.uniform2fv(rotationLocation, edits.rotation);
+    gl.uniform2fv(translationLocation, edits.translation);
+    gl.uniform1f(scaleLocation, edits.scale);
     gl.uniform1f(grayscaleLocation, edits.grayscale);
     gl.uniform1f(sepiaLocation, edits.sepia);
     gl.uniform1f(invertLocation, edits.invert);
@@ -286,6 +292,9 @@ const render = (image) => {
     // Edits
     mirrorLocation = gl.getUniformLocation(program, "u_mirror");
     reflectLocation = gl.getUniformLocation(program, "u_reflect");
+    rotationLocation = gl.getUniformLocation(program, "u_rotation");
+    translationLocation = gl.getUniformLocation(program, "u_translation");
+    scaleLocation = gl.getUniformLocation(program, "u_scale");
     grayscaleLocation = gl.getUniformLocation(program, "u_grayscale");
     sepiaLocation = gl.getUniformLocation(program, "u_sepia");
     invertLocation = gl.getUniformLocation(program, "u_invert");
@@ -316,8 +325,27 @@ const setRectangle = (gl, x, y, width, height) => {
 
 var prevFilter;
 
+function arrayEquals(a, b) {
+  return (
+    Array.isArray(a) &&
+    Array.isArray(b) &&
+    a.length === b.length &&
+    a.every((val, index) => val === b[index])
+  );
+}
+
 // Edit image
 const editImage = (drawEffects) => {
+  const arrayEquals = (arr) => {
+    const rotation = edits.rotation;
+    return (
+      Array.isArray(rotation) &&
+      Array.isArray(arr) &&
+      rotation.length === arr.length &&
+      rotation.every((val, index) => val === arr[index])
+    );
+  };
+
   // Adjust
   $("#mirror").on("click", () => {
     tempMirror = edits.mirror;
@@ -328,6 +356,48 @@ const editImage = (drawEffects) => {
   $("#reflect").on("click", () => {
     tempReflect = edits.reflect;
     edits.reflect = -edits.reflect;
+    drawEffects();
+  });
+
+  $(".rotate").on("click", (e) => {
+    console.log("test");
+    if (e.target.value === "clockwise") {
+      if (arrayEquals([0, 1])) {
+        edits.rotation = [1, 0];
+        edits.translation = [0, 612];
+        edits.scale = 408 / 612;
+      } else if (arrayEquals([1, 0])) {
+        edits.rotation = [0, -1];
+        edits.translation = [612, 408];
+        edits.scale = 1;
+      } else if (arrayEquals([0, -1])) {
+        edits.rotation = [-1, 0];
+        edits.translation = [612, 0];
+        edits.scale = 408 / 612;
+      } else {
+        edits.rotation = [0, 1];
+        edits.translation = [0, 0];
+        edits.scale = 1;
+      }
+    } else {
+      if (arrayEquals([0, 1])) {
+        edits.rotation = [-1, 0];
+        edits.translation = [612, 0];
+        edits.scale = 408 / 612;
+      } else if (arrayEquals([1, 0])) {
+        edits.rotation = [0, 1];
+        edits.translation = [0, 0];
+        edits.scale = 1;
+      } else if (arrayEquals([0, -1])) {
+        edits.rotation = [1, 0];
+        edits.translation = [0, 612];
+        edits.scale = 408 / 612;
+      } else {
+        edits.rotation = [0, -1];
+        edits.translation = [612, 408];
+        edits.scale = 1;
+      }
+    }
     drawEffects();
   });
 
