@@ -6,7 +6,6 @@ var mirrorLocation,
   reflectLocation,
   rotationLocation,
   translationLocation,
-  scaleLocation,
   grayscaleLocation,
   sepiaLocation,
   invertLocation,
@@ -109,6 +108,8 @@ const render = (image) => {
   $("#resetButton").on("click", () => {
     edits = new InitEdits();
     tempReflect = tempMirror = 1;
+    canvas.width = image.width;
+    canvas.height = image.height;
     initValues();
 
     drawEffects();
@@ -271,7 +272,6 @@ const render = (image) => {
     gl.uniform1f(reflectLocation, edits.reflect);
     gl.uniform2fv(rotationLocation, edits.rotation);
     gl.uniform2fv(translationLocation, edits.translation);
-    gl.uniform1f(scaleLocation, edits.scale);
     gl.uniform1f(grayscaleLocation, edits.grayscale);
     gl.uniform1f(sepiaLocation, edits.sepia);
     gl.uniform1f(invertLocation, edits.invert);
@@ -294,7 +294,6 @@ const render = (image) => {
     reflectLocation = gl.getUniformLocation(program, "u_reflect");
     rotationLocation = gl.getUniformLocation(program, "u_rotation");
     translationLocation = gl.getUniformLocation(program, "u_translation");
-    scaleLocation = gl.getUniformLocation(program, "u_scale");
     grayscaleLocation = gl.getUniformLocation(program, "u_grayscale");
     sepiaLocation = gl.getUniformLocation(program, "u_sepia");
     invertLocation = gl.getUniformLocation(program, "u_invert");
@@ -360,42 +359,60 @@ const editImage = (drawEffects) => {
   });
 
   $(".rotate").on("click", (e) => {
-    console.log("test");
+    var w = image.width,
+      h = image.height;
+
     if (e.target.value === "clockwise") {
       if (arrayEquals([0, 1])) {
         edits.rotation = [1, 0];
-        edits.translation = [0, 612];
-        edits.scale = 408 / 612;
+        edits.translation = [0, w];
+
+        canvas.width = h;
+        canvas.height = w;
       } else if (arrayEquals([1, 0])) {
         edits.rotation = [0, -1];
-        edits.translation = [612, 408];
-        edits.scale = 1;
+        edits.translation = [w, h];
+
+        canvas.width = w;
+        canvas.height = h;
       } else if (arrayEquals([0, -1])) {
         edits.rotation = [-1, 0];
-        edits.translation = [612, 0];
-        edits.scale = 408 / 612;
+        edits.translation = [h, 0];
+
+        canvas.width = h;
+        canvas.height = w;
       } else {
         edits.rotation = [0, 1];
         edits.translation = [0, 0];
-        edits.scale = 1;
+
+        canvas.width = w;
+        canvas.height = h;
       }
     } else {
       if (arrayEquals([0, 1])) {
         edits.rotation = [-1, 0];
-        edits.translation = [612, 0];
-        edits.scale = 408 / 612;
+        edits.translation = [h, 0];
+
+        canvas.width = h;
+        canvas.height = w;
       } else if (arrayEquals([1, 0])) {
         edits.rotation = [0, 1];
         edits.translation = [0, 0];
-        edits.scale = 1;
+
+        canvas.width = w;
+        canvas.height = h;
       } else if (arrayEquals([0, -1])) {
         edits.rotation = [1, 0];
-        edits.translation = [0, 612];
-        edits.scale = 408 / 612;
+        edits.translation = [0, w];
+
+        canvas.width = h;
+        canvas.height = w;
       } else {
         edits.rotation = [0, -1];
-        edits.translation = [612, 408];
-        edits.scale = 1;
+        edits.translation = [w, h];
+
+        canvas.width = w;
+        canvas.height = h;
       }
     }
     drawEffects();

@@ -8,18 +8,17 @@ const vsSource = `
   uniform float u_reflect;
   uniform vec2 u_rotation;
   uniform vec2 u_translation;
-  uniform float u_scale;
   
   varying vec2 v_texCoord;
   
   void main() {
-    vec2 scaledPosition = a_position * u_scale;
+    vec2 scaledPosition = a_position;
 
     vec2 rotatedPosition = vec2(
       scaledPosition.x * u_rotation.y + scaledPosition.y * u_rotation.x,
       scaledPosition.y * u_rotation.y - scaledPosition.x * u_rotation.x
     );
-    vec2 position = rotatedPosition + u_translation * u_scale;
+    vec2 position = rotatedPosition + u_translation;
 
     // convert the rectangle from pixels to 0.0 to 1.0
     vec2 zeroToOne = position / u_resolution;
