@@ -1,4 +1,5 @@
 const image = new Image();
+var edits;
 
 class InitEdits {
   constructor() {
@@ -25,8 +26,6 @@ class InitEdits {
     this.vignette = 0;
   }
 }
-
-var edits = new InitEdits();
 
 // Upload file
 $("#selectFile").on("input", (e) => {
@@ -61,12 +60,17 @@ $("#imageDropzone").on("dragleave", (e) => {
   $("#imageDropzone").css("background-color", "#373737");
 });
 
+var currImage;
+
 const readFile = (file) => {
   if (file.type.includes("image")) {
     const reader = new FileReader();
+    edits = new InitEdits();
+    initValues();
 
     reader.onload = function (e) {
       image.src = e.target.result;
+      currImage = e.target.result;
 
       image.onload = function () {
         render(image);

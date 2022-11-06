@@ -4,6 +4,8 @@ var capture = false;
 var prevFilter;
 
 const render = (image) => {
+  var thisImage = image.src;
+
   // Get A WebGL context
   var canvas = document.querySelector("#canvas");
   var gl = canvas.getContext("webgl");
@@ -100,6 +102,9 @@ const render = (image) => {
   editImage(drawEffects);
 
   function drawEffects() {
+    // Check if uploaded image has changed
+    if (thisImage != currImage) return;
+
     // Clear the canvas
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -247,12 +252,15 @@ const render = (image) => {
     gl.uniform1f(grayscaleLocation, edits.grayscale);
     gl.uniform1f(sepiaLocation, edits.sepia);
     gl.uniform1f(invertLocation, edits.invert);
+
     gl.uniform1f(exposureLocation, edits.exposure);
     gl.uniform1f(contrastLocation, edits.contrast);
     gl.uniform1f(gammaLocation, edits.gamma);
+
     gl.uniform1f(saturationLocation, edits.saturation);
     gl.uniform1f(temperatureLocation, edits.temperature);
     gl.uniform1f(tintLocation, edits.tint);
+
     gl.uniform1f(vignetteLocation, edits.vignette);
   }
 };
@@ -275,6 +283,12 @@ const editImage = (drawEffects) => {
   $("#resetButton").on("click", () => {
     edits = new InitEdits();
     initValues();
+
+    // Remove active filter
+    if (prevFilter) {
+      $(`#${prevFilter}`).removeClass("active-filter");
+      prevFilter = null;
+    }
 
     drawEffects();
   });
