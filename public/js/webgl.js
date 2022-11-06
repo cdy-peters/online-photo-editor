@@ -1,27 +1,7 @@
 "use strict";
 
-// Init uniforms
-var resolutionLocation, textureSizeLocation;
-var mirrorLocation,
-  reflectLocation,
-  rotationLocation,
-  translationLocation,
-  grayscaleLocation,
-  sepiaLocation,
-  invertLocation,
-  exposureLocation,
-  contrastLocation,
-  gammaLocation,
-  saturationLocation,
-  temperatureLocation,
-  tintLocation,
-  vignetteLocation;
-var kernelLocation, kernelWeightLocation;
-
-var tempReflect = 1,
-  tempMirror = 1;
-
 var capture = false;
+var prevFilter;
 
 const render = (image) => {
   // Get A WebGL context
@@ -67,6 +47,7 @@ const render = (image) => {
   // Create 2 textures with framebuffer
   var textures = [],
     framebuffers = [];
+
   for (var i = 0; i < 2; ++i) {
     var texture = createAndSetTexture(gl);
     textures.push(texture);
@@ -97,31 +78,30 @@ const render = (image) => {
   }
 
   // lookup uniforms
-  lookupUniforms();
+  var resolutionLocation = gl.getUniformLocation(program, "u_resolution"),
+    textureSizeLocation = gl.getUniformLocation(program, "u_textureSize"),
+    kernelLocation = gl.getUniformLocation(program, "u_kernel[0]"),
+    kernelWeightLocation = gl.getUniformLocation(program, "u_kernelWeight"),
+    flipYLocation = gl.getUniformLocation(program, "u_flipY");
+  var grayscaleLocation = gl.getUniformLocation(program, "u_grayscale"),
+    sepiaLocation = gl.getUniformLocation(program, "u_sepia"),
+    invertLocation = gl.getUniformLocation(program, "u_invert");
+  var exposureLocation = gl.getUniformLocation(program, "u_exposure"),
+    contrastLocation = gl.getUniformLocation(program, "u_contrast"),
+    gammaLocation = gl.getUniformLocation(program, "u_gamma");
+  var saturationLocation = gl.getUniformLocation(program, "u_saturation"),
+    temperatureLocation = gl.getUniformLocation(program, "u_temperature"),
+    tintLocation = gl.getUniformLocation(program, "u_tint");
+  var vignetteLocation = gl.getUniformLocation(program, "u_vignette");
 
   drawEffects();
 
   // Edit image
   editImage(drawEffects);
 
-  // Reset image
-  $("#resetButton").on("click", () => {
-    edits = new InitEdits();
-    tempReflect = tempMirror = 1;
-    canvas.width = image.width;
-    canvas.height = image.height;
-    initValues();
-
-    drawEffects();
-  });
-
-  // Download image
-  $("#downloadButton").on("click", () => {
-    capture = true;
-    drawEffects();
-  });
-
   function drawEffects() {
+    resizeCanvasToDisplaySize(gl.canvas);
+
     // Clear the canvas
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -178,31 +158,29 @@ const render = (image) => {
     gl.bindTexture(gl.TEXTURE_2D, originalImageTexture);
 
     // don't y flip images while drawing to the textures
-    edits.reflect = 1;
-    edits.mirror = 1;
+    gl.uniform1f(flipYLocation, 1);
 
     // loop through each effect we want to apply.
     var count = 0;
     if (edits.sharpness > 0) {
       setFramebuffer(framebuffers[0], image.width, image.height);
-      drawCanvas("sharpness");
+      drawWithKernel("sharpness");
       gl.bindTexture(gl.TEXTURE_2D, textures[count % 2]);
       count++;
     }
     if (edits.blur > 0) {
       for (var i = 0; i < edits.blur; i++) {
         setFramebuffer(framebuffers[count % 2], image.width, image.height);
-        drawCanvas("blur");
+        drawWithKernel("blur");
         gl.bindTexture(gl.TEXTURE_2D, textures[count % 2]);
         count++;
       }
     }
 
     // finally draw the result to the canvas.
-    edits.reflect = -tempReflect; // need to y flip for canvas
-    edits.mirror = -tempMirror;
+    gl.uniform1f(flipYLocation, -1); // need to y flip for canvas
     setFramebuffer(null, gl.canvas.width, gl.canvas.height);
-    drawCanvas("normal");
+    drawWithKernel("normal");
 
     // Download image
     if (capture) {
@@ -227,7 +205,7 @@ const render = (image) => {
     gl.viewport(0, 0, width, height);
   }
 
-  function drawCanvas(name) {
+  function drawWithKernel(name) {
     // set the kernel and it's weight
     var kernel;
     var kernelWeight = 1;
@@ -268,10 +246,6 @@ const render = (image) => {
     gl.uniform2f(textureSizeLocation, image.width, image.height);
 
     // Edits
-    gl.uniform1f(mirrorLocation, edits.mirror);
-    gl.uniform1f(reflectLocation, edits.reflect);
-    gl.uniform2fv(rotationLocation, edits.rotation);
-    gl.uniform2fv(translationLocation, edits.translation);
     gl.uniform1f(grayscaleLocation, edits.grayscale);
     gl.uniform1f(sepiaLocation, edits.sepia);
     gl.uniform1f(invertLocation, edits.invert);
@@ -282,31 +256,6 @@ const render = (image) => {
     gl.uniform1f(temperatureLocation, edits.temperature);
     gl.uniform1f(tintLocation, edits.tint);
     gl.uniform1f(vignetteLocation, edits.vignette);
-  }
-
-  // Lookup uniforms
-  function lookupUniforms() {
-    resolutionLocation = gl.getUniformLocation(program, "u_resolution");
-    textureSizeLocation = gl.getUniformLocation(program, "u_textureSize");
-
-    // Edits
-    mirrorLocation = gl.getUniformLocation(program, "u_mirror");
-    reflectLocation = gl.getUniformLocation(program, "u_reflect");
-    rotationLocation = gl.getUniformLocation(program, "u_rotation");
-    translationLocation = gl.getUniformLocation(program, "u_translation");
-    grayscaleLocation = gl.getUniformLocation(program, "u_grayscale");
-    sepiaLocation = gl.getUniformLocation(program, "u_sepia");
-    invertLocation = gl.getUniformLocation(program, "u_invert");
-    exposureLocation = gl.getUniformLocation(program, "u_exposure");
-    contrastLocation = gl.getUniformLocation(program, "u_contrast");
-    gammaLocation = gl.getUniformLocation(program, "u_gamma");
-    saturationLocation = gl.getUniformLocation(program, "u_saturation");
-    temperatureLocation = gl.getUniformLocation(program, "u_temperature");
-    tintLocation = gl.getUniformLocation(program, "u_tint");
-    vignetteLocation = gl.getUniformLocation(program, "u_vignette");
-
-    kernelLocation = gl.getUniformLocation(program, "u_kernel[0]");
-    kernelWeightLocation = gl.getUniformLocation(program, "u_kernelWeight");
   }
 };
 
@@ -322,99 +271,19 @@ const setRectangle = (gl, x, y, width, height) => {
   );
 };
 
-var prevFilter;
-
-function arrayEquals(a, b) {
-  return (
-    Array.isArray(a) &&
-    Array.isArray(b) &&
-    a.length === b.length &&
-    a.every((val, index) => val === b[index])
-  );
-}
-
 // Edit image
 const editImage = (drawEffects) => {
-  const arrayEquals = (arr) => {
-    const rotation = edits.rotation;
-    return (
-      Array.isArray(rotation) &&
-      Array.isArray(arr) &&
-      rotation.length === arr.length &&
-      rotation.every((val, index) => val === arr[index])
-    );
-  };
+  // Reset image
+  $("#resetButton").on("click", () => {
+    edits = new InitEdits();
+    initValues();
 
-  // Adjust
-  $("#mirror").on("click", () => {
-    tempMirror = edits.mirror;
-    edits.mirror = -edits.mirror;
     drawEffects();
   });
 
-  $("#reflect").on("click", () => {
-    tempReflect = edits.reflect;
-    edits.reflect = -edits.reflect;
-    drawEffects();
-  });
-
-  $(".rotate").on("click", (e) => {
-    var w = image.width,
-      h = image.height;
-
-    if (e.target.value === "clockwise") {
-      if (arrayEquals([0, 1])) {
-        edits.rotation = [1, 0];
-        edits.translation = [0, w];
-
-        canvas.width = h;
-        canvas.height = w;
-      } else if (arrayEquals([1, 0])) {
-        edits.rotation = [0, -1];
-        edits.translation = [w, h];
-
-        canvas.width = w;
-        canvas.height = h;
-      } else if (arrayEquals([0, -1])) {
-        edits.rotation = [-1, 0];
-        edits.translation = [h, 0];
-
-        canvas.width = h;
-        canvas.height = w;
-      } else {
-        edits.rotation = [0, 1];
-        edits.translation = [0, 0];
-
-        canvas.width = w;
-        canvas.height = h;
-      }
-    } else {
-      if (arrayEquals([0, 1])) {
-        edits.rotation = [-1, 0];
-        edits.translation = [h, 0];
-
-        canvas.width = h;
-        canvas.height = w;
-      } else if (arrayEquals([1, 0])) {
-        edits.rotation = [0, 1];
-        edits.translation = [0, 0];
-
-        canvas.width = w;
-        canvas.height = h;
-      } else if (arrayEquals([0, -1])) {
-        edits.rotation = [1, 0];
-        edits.translation = [0, w];
-
-        canvas.width = h;
-        canvas.height = w;
-      } else {
-        edits.rotation = [0, -1];
-        edits.translation = [w, h];
-
-        canvas.width = w;
-        canvas.height = h;
-      }
-    }
+  // Download image
+  $("#downloadButton").on("click", () => {
+    capture = true;
     drawEffects();
   });
 

@@ -4,24 +4,13 @@ const vsSource = `
   attribute vec2 a_texCoord;
   
   uniform vec2 u_resolution;
-  uniform float u_mirror;
-  uniform float u_reflect;
-  uniform vec2 u_rotation;
-  uniform vec2 u_translation;
+  uniform float u_flipY;
   
   varying vec2 v_texCoord;
   
   void main() {
-    vec2 scaledPosition = a_position;
-
-    vec2 rotatedPosition = vec2(
-      scaledPosition.x * u_rotation.y + scaledPosition.y * u_rotation.x,
-      scaledPosition.y * u_rotation.y - scaledPosition.x * u_rotation.x
-    );
-    vec2 position = rotatedPosition + u_translation;
-
     // convert the rectangle from pixels to 0.0 to 1.0
-    vec2 zeroToOne = position / u_resolution;
+    vec2 zeroToOne = a_position / u_resolution;
 
     // convert from 0->1 to 0->2
     vec2 zeroToTwo = zeroToOne * 2.0;
@@ -29,7 +18,7 @@ const vsSource = `
     // convert from 0->2 to -1->+1 (clipspace)
     vec2 clipSpace = zeroToTwo - 1.0;
 
-    gl_Position = vec4(clipSpace * vec2(u_mirror, u_reflect), 0, 1);
+    gl_Position = vec4(clipSpace * vec2(1, u_flipY), 0, 1);
 
     // pass the texCoord to the fragment shader
     // The GPU will interpolate this value between points.
@@ -43,19 +32,21 @@ const fsSource = `
   // our texture
   uniform sampler2D u_image;
   uniform vec2 u_textureSize;
-
   uniform float u_kernel[9];
   uniform float u_kernelWeight;
 
-  uniform float u_exposure;
-  uniform float u_contrast;
   uniform bool u_grayscale;
   uniform bool u_sepia;
   uniform bool u_invert;
+  
+  uniform float u_exposure;
+  uniform float u_contrast;
   uniform float u_gamma;
+
   uniform float u_saturation;
   uniform float u_temperature;
   uniform float u_tint;
+
   uniform float u_vignette;
   
   // the texCoords passed in from the vertex shader.

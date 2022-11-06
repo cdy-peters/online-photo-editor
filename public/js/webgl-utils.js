@@ -36,3 +36,15 @@ function createAndSetTexture(gl) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
   return texture;
 }
+
+function resizeCanvasToDisplaySize(canvas, multiplier) {
+  multiplier = multiplier || 1;
+  const width = (canvas.clientWidth * multiplier) | 0;
+  const height = (canvas.clientHeight * multiplier) | 0;
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width;
+    canvas.height = height;
+    return true;
+  }
+  return false;
+}

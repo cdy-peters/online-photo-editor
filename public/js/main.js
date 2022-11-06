@@ -2,12 +2,6 @@ const image = new Image();
 
 class InitEdits {
   constructor() {
-    // Adjust
-    this.mirror = 1;
-    this.reflect = -1;
-    this.rotation = [0, 1];
-    this.translation = [0, 0];
-
     // Filters
     this.grayscale = false;
     this.sepia = false;
