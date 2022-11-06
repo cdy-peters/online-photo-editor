@@ -1,5 +1,5 @@
 const image = new Image();
-var edits;
+var edits, prevFilter;
 
 class InitEdits {
   constructor() {
@@ -65,12 +65,17 @@ var currImage;
 const readFile = (file) => {
   if (file.type.includes("image")) {
     const reader = new FileReader();
+
     edits = new InitEdits();
     initValues();
 
     reader.onload = function (e) {
       image.src = e.target.result;
       currImage = e.target.result;
+      if (prevFilter) {
+        $(`#${prevFilter}`).removeClass("active-filter");
+        prevFilter = null;
+      }
 
       image.onload = function () {
         render(image);

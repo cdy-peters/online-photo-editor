@@ -1,7 +1,6 @@
 "use strict";
 
 var capture = false;
-var prevFilter;
 
 const render = (image) => {
   var thisImage = image.src;
@@ -263,6 +262,108 @@ const render = (image) => {
 
     gl.uniform1f(vignetteLocation, edits.vignette);
   }
+
+  // Edit image
+  function editImage(drawEffects) {
+    // Reset image
+    $("#resetButton").on("click", () => {
+      edits = new InitEdits();
+      initValues();
+
+      // Remove active filter
+      if (prevFilter) {
+        $(`#${prevFilter}`).removeClass("active-filter");
+        prevFilter = null;
+      }
+
+      drawEffects();
+    });
+
+    // Download image
+    $("#downloadButton").on("click", () => {
+      capture = true;
+      drawEffects();
+    });
+
+    // Filters
+    $("#filters > button").on("click", (e) => {
+      if (thisImage != currImage) return;
+
+      if (prevFilter) {
+        edits[prevFilter] = false;
+        $(`#${prevFilter}`).removeClass("active-filter");
+      }
+
+      const id = e.target.id;
+      if (prevFilter === id) {
+        prevFilter = null;
+      } else {
+        edits[id] = !edits[id];
+        prevFilter = id;
+        $(`#${id}`).addClass("active-filter");
+      }
+
+      drawEffects();
+    });
+
+    // Light
+    $("#exposure").on("input", (e) => {
+      edits.exposure = e.target.value;
+      $("#exposure-value").text(e.target.value);
+      drawEffects();
+    });
+
+    $("#contrast").on("input", (e) => {
+      edits.contrast = e.target.value;
+      $("#contrast-value").text(e.target.value);
+      drawEffects();
+    });
+
+    $("#gamma").on("input", (e) => {
+      edits.gamma = e.target.value;
+      $("#gamma-value").text(e.target.value);
+      drawEffects();
+    });
+
+    // Color
+    $("#saturation").on("input", (e) => {
+      edits.saturation = e.target.value;
+      $("#saturation-value").text(e.target.value);
+      drawEffects();
+    });
+
+    $("#temperature").on("input", (e) => {
+      edits.temperature = e.target.value;
+      $("#temperature-value").text(e.target.value);
+      drawEffects();
+    });
+
+    $("#tint").on("input", (e) => {
+      edits.tint = e.target.value;
+      $("#tint-value").text(e.target.value);
+      drawEffects();
+    });
+
+    // Detail
+    $("#sharpness").on("input", (e) => {
+      edits.sharpness = e.target.value;
+      $("#sharpness-value").text(e.target.value);
+      drawEffects();
+    });
+
+    $("#blur").on("input", (e) => {
+      edits.blur = e.target.value;
+      $("#blur-value").text(e.target.value);
+      drawEffects();
+    });
+
+    // Effects
+    $("#vignette").on("input", (e) => {
+      edits.vignette = e.target.value;
+      $("#vignette-value").text(e.target.value);
+      drawEffects();
+    });
+  }
 };
 
 const setRectangle = (gl, x, y, width, height) => {
@@ -275,104 +376,4 @@ const setRectangle = (gl, x, y, width, height) => {
     new Float32Array([x1, y1, x2, y1, x1, y2, x1, y2, x2, y1, x2, y2]),
     gl.STATIC_DRAW
   );
-};
-
-// Edit image
-const editImage = (drawEffects) => {
-  // Reset image
-  $("#resetButton").on("click", () => {
-    edits = new InitEdits();
-    initValues();
-
-    // Remove active filter
-    if (prevFilter) {
-      $(`#${prevFilter}`).removeClass("active-filter");
-      prevFilter = null;
-    }
-
-    drawEffects();
-  });
-
-  // Download image
-  $("#downloadButton").on("click", () => {
-    capture = true;
-    drawEffects();
-  });
-
-  // Filters
-  $("#filters > button").on("click", (e) => {
-    if (prevFilter) {
-      edits[prevFilter] = false;
-      $(`#${prevFilter}`).removeClass("active-filter");
-    }
-
-    const id = e.target.id;
-    if (prevFilter === id) {
-      prevFilter = null;
-    } else {
-      edits[id] = !edits[id];
-      prevFilter = id;
-      $(`#${id}`).addClass("active-filter");
-    }
-
-    drawEffects();
-  });
-
-  // Light
-  $("#exposure").on("input", (e) => {
-    edits.exposure = e.target.value;
-    $("#exposure-value").text(e.target.value);
-    drawEffects();
-  });
-
-  $("#contrast").on("input", (e) => {
-    edits.contrast = e.target.value;
-    $("#contrast-value").text(e.target.value);
-    drawEffects();
-  });
-
-  $("#gamma").on("input", (e) => {
-    edits.gamma = e.target.value;
-    $("#gamma-value").text(e.target.value);
-    drawEffects();
-  });
-
-  // Color
-  $("#saturation").on("input", (e) => {
-    edits.saturation = e.target.value;
-    $("#saturation-value").text(e.target.value);
-    drawEffects();
-  });
-
-  $("#temperature").on("input", (e) => {
-    edits.temperature = e.target.value;
-    $("#temperature-value").text(e.target.value);
-    drawEffects();
-  });
-
-  $("#tint").on("input", (e) => {
-    edits.tint = e.target.value;
-    $("#tint-value").text(e.target.value);
-    drawEffects();
-  });
-
-  // Detail
-  $("#sharpness").on("input", (e) => {
-    edits.sharpness = e.target.value;
-    $("#sharpness-value").text(e.target.value);
-    drawEffects();
-  });
-
-  $("#blur").on("input", (e) => {
-    edits.blur = e.target.value;
-    $("#blur-value").text(e.target.value);
-    drawEffects();
-  });
-
-  // Effects
-  $("#vignette").on("input", (e) => {
-    edits.vignette = e.target.value;
-    $("#vignette-value").text(e.target.value);
-    drawEffects();
-  });
 };
