@@ -17,8 +17,6 @@
 
     <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png">
 
-    <script src="https://unpkg.com/gpu.js@latest/dist/gpu-browser.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gpu.js@latest/dist/gpu-browser.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.1.min.js"
         integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
 
@@ -31,67 +29,37 @@
         <h1 id="title">Online Photo Editor</h1>
 
         <div id="imageActions">
-            <button id="downloadButton" onclick="download()" disabled>Download</button>
-            <button id="resetButton" onclick="reset()" disabled>Reset</button>
-            <input type="file" id="selectFile" onchange="selectFile(this)" style="display: none;" />
-            <button id="uploadButton" onclick="document.getElementById('selectFile').click()">Upload</button>
+            <button id="downloadButton" disabled>Download</button>
+            <button id="resetButton" disabled>Reset</button>
+            <input type="file" id="selectFile" accept="image/*" style="display: none;" />
+            <button id="uploadButton" onclick="$('#selectFile').click()">Upload</button>
         </div>
 
-        <div id="imageDropzone" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)"
-            ondragleave="dragLeaveHandler(event)">
+        <div id="imageDropzone">
             <div id="imageDropzoneInner">
                 <p>Drag and drop an image or select an image via the new image button</p>
             </div>
         </div>
+
         <div id="canvasContainer" hidden>
             <canvas id="canvas"></canvas>
-            <canvas id="gpuCanvas" style="display: none;"></canvas>
         </div>
         <br>
 
         <div id="editOptions" hidden>
-
             <!-- Tabs -->
             <div id="tab">
-                <button id="adjust-tab" class="tablinks btn-active" onclick="openTab(event, 'adjust')">Adjust</button>
-                <button id="filters-tab" class="tablinks" onclick="openTab(event, 'filters')">Filters</button>
-                <button id="light-tab" class="tablinks" onclick="openTab(event, 'light')">Light</button>
-                <button id="color-tab" class="tablinks" onclick="openTab(event, 'color')">Color</button>
-                <button id="detail-tab" class="tablinks" onclick="openTab(event, 'detail')">Detail</button>
-                <button id="effects-tab" class="tablinks" onclick="openTab(event, 'effects')">Effects</button>
+                <button id="filters-tab" class="tablinks btn-active">Filters</button>
+                <button id="light-tab" class="tablinks">Light</button>
+                <button id="color-tab" class="tablinks">Color</button>
+                <button id="detail-tab" class="tablinks">Detail</button>
+                <button id="effects-tab" class="tablinks">Effects</button>
             </div>
 
-            <!-- Content -->
-            <div class="tabcontent" id="adjust">
-                <button onclick="mirrorImage()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                        fill="currentColor" class="bi bi-symmetry-vertical" viewBox="0 0 16 16">
-                        <path
-                            d="M7 2.5a.5.5 0 0 0-.939-.24l-6 11A.5.5 0 0 0 .5 14h6a.5.5 0 0 0 .5-.5v-11zm2.376-.484a.5.5 0 0 1 .563.245l6 11A.5.5 0 0 1 15.5 14h-6a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .376-.484zM10 4.46V13h4.658L10 4.46z" />
-                    </svg>Mirror</button>
-                <button onclick="reflectImage()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                        fill="currentColor" class="bi bi-symmetry-horizontal" viewBox="0 0 16 16">
-                        <path
-                            d="M13.5 7a.5.5 0 0 0 .24-.939l-11-6A.5.5 0 0 0 2 .5v6a.5.5 0 0 0 .5.5h11zm.485 2.376a.5.5 0 0 1-.246.563l-11 6A.5.5 0 0 1 2 15.5v-6a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 .485.376zM11.539 10H3v4.658L11.54 10z" />
-                    </svg>Reflect</button>
-                <button onclick="rotateClockwise()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                        fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
-                        <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z" />
-                        <path
-                            d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z" />
-                    </svg>Rotate
-                    90°</button>
-                <button onclick="rotateCounterClockwise()"><svg xmlns="http://www.w3.org/2000/svg" width="16"
-                        height="16" fill="currentColor" class="bi bi-arrow-counterclockwise" viewBox="0 0 16 16">
-                        <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z" />
-                        <path
-                            d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z" />
-                    </svg>Rotate -90°</button>
-            </div>
-
-            <div class="tabcontent" id="filters" hidden>
-                <button id="grayscale" onclick="updateEdits('grayscale')">Grayscale</button>
-                <button id="sepia" onclick="updateEdits('sepia')">Sepia</button>
-                <button id="invert" onclick="updateEdits('invert')">Invert</button>
+            <div class="tabcontent" id="filters">
+                <button id="grayscale">Grayscale</button>
+                <button id="sepia">Sepia</button>
+                <button id="invert">Invert</button>
             </div>
 
             <div class="tabcontent" id="light" hidden>
@@ -99,8 +67,7 @@
                     <label for="exposure">Exposure</label><br>
                     <div>
                         <p id="exposure-value">0</p>
-                        <input type="range" id="exposure" min="-100" max="100" value="0"
-                            oninput="updateEdits('exposure')">
+                        <input type="range" id="exposure" min="-1" max="1" step="0.01" value="0">
                     </div>
                 </div>
 
@@ -108,8 +75,7 @@
                     <label for="contrast">Contrast</label><br>
                     <div>
                         <p id="contrast-value">0</p>
-                        <input type="range" id="contrast" min="-100" max="100" value="0"
-                            oninput="updateEdits('contrast')">
+                        <input type="range" id="contrast" min="-1" max="1" step="0.01" value="0">
                     </div>
                 </div>
 
@@ -117,7 +83,7 @@
                     <label for="gamma">Gamma</label><br>
                     <div>
                         <p id="gamma-value">0</p>
-                        <input type="range" id="gamma" min="-100" max="100" value="0" oninput="updateEdits('gamma')">
+                        <input type="range" id="gamma" min="-1" max="1" step="0.01" value="0">
                     </div>
                 </div>
             </div>
@@ -127,8 +93,7 @@
                     <label for="saturation">Saturation</label><br>
                     <div>
                         <p id="saturation-value">0</p>
-                        <input type="range" id="saturation" min="-100" max="100" value="0"
-                            oninput="updateEdits('saturation')">
+                        <input type="range" id="saturation" min="-1" max="1" step="0.01" value="0">
                     </div>
                 </div>
 
@@ -136,8 +101,7 @@
                     <label for="temperature">Temperature</label><br>
                     <div>
                         <p id="temperature-value">0</p>
-                        <input type="range" id="temperature" min="-100" max="100" value="0"
-                            oninput="updateEdits('temperature')">
+                        <input type="range" id="temperature" min="-1" max="1" step="0.01" value="0">
                     </div>
                 </div>
 
@@ -145,19 +109,17 @@
                     <label for="tint">Tint</label><br>
                     <div>
                         <p id="tint-value">0</p>
-                        <input type="range" id="tint" min="-100" max="100" value="0" oninput="updateEdits('tint')">
+                        <input type="range" id="tint" min="-1" max="1" step="0.01" value="0">
                     </div>
                 </div>
             </div>
 
             <div class="tabcontent" id="detail" hidden>
-                <p style="color: #ff8c8c;">* Sharpness and blur cannot be applied at the same time</p>
                 <div class="input-range">
                     <label for="sharpness">Sharpness</label><br>
                     <div>
                         <p id="sharpness-value">0</p>
-                        <input type="range" id="sharpness" min="0" max="10" value="0"
-                            oninput="updateEdits('sharpness')">
+                        <input type="range" id="sharpness" min="0" max="10" step="0.1" value="0">
                     </div>
                 </div>
 
@@ -165,23 +127,26 @@
                     <label for="blur">Blur</label><br>
                     <div>
                         <p id="blur-value">0</p>
-                        <input type="range" id="blur" min="0" max="10" value="0" oninput="updateEdits('blur')">
+                        <input type="range" id="blur" min="0" max="10" step="0.1" value="0">
                     </div>
                 </div>
             </div>
 
             <div class="tabcontent" id="effects" hidden>
                 <div class="input-range">
-                    <label for="grain">Grain</label><br>
+                    <label for="vignette">Vignette</label><br>
                     <div>
-                        <p id="grain-value">0</p>
-                        <input type="range" id="grain" min="0" max="10" value="0" oninput="updateEdits('grain')">
+                        <p id="vignette-value">0</p>
+                        <input type="range" id="vignette" min="0" max="2" step="0.01" value="0">
                     </div>
                 </div>
             </div>
         </div>
 
+        <script src="js/webgl-utils.min.js"></script>
         <script src="js/main.min.js"></script>
+        <script src="js/shaders.min.js"></script>
+        <script src="js/webgl.min.js"></script>
     </body>
 
     <footer>
