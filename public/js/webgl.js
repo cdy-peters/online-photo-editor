@@ -100,8 +100,6 @@ const render = (image) => {
   editImage(drawEffects);
 
   function drawEffects() {
-    resizeCanvasToDisplaySize(gl.canvas);
-
     // Clear the canvas
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);

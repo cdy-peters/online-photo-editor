@@ -121,11 +121,14 @@ const initValues = () => {
 };
 
 // Tabs
-var prevTab = "adjust";
-const openTab = (e, tab) => {
+var prevTab = "filters";
+$(".tablinks").on("click", (e) => {
+  var tab = e.target.id.split("-")[0];
+
   $(`#${prevTab}`).hide();
   $(`#${prevTab}-tab`).removeClass("btn-active");
   $(`#${tab}`).show();
   $(`#${tab}-tab`).addClass("btn-active");
+
   prevTab = tab;
-};
+});
