@@ -49,6 +49,12 @@ const render = (image) => {
     render.apply(image);
   });
 
+  $("#blur").on("input", (e) => {
+    var val = e.target.value;
+    render.addShader("blur", val);
+    render.apply(image);
+  });
+
   $("#vignette").on("input", (e) => {
     var val = e.target.value;
     render.addShader("vignette", val);
@@ -176,6 +182,8 @@ class Init {
         return this.tint(val);
       case "sharpness":
         return this.sharpness(val);
+      case "blur":
+        return this.blur(val);
       case "vignette":
         return this.vignette(val);
     }
@@ -482,10 +490,29 @@ class Init {
     this.gl.useProgram(compProg.program);
 
     const kernel = new Float32Array([0, -1, 0, -1, 5, -1, 0, -1, 0]);
-    this.gl.uniform1fv(compProg.uniform.kernel, kernel),
-      this.gl.uniform1f(compProg.uniform.u_sharpness, val);
-    this.gl.uniform2f(compProg.uniform.offset, 1 / this.width, 1 / this.height),
-      this.draw(compProg);
+    this.gl.uniform1fv(compProg.uniform.kernel, kernel);
+    this.gl.uniform1f(compProg.uniform.u_sharpness, val);
+    this.gl.uniform2f(compProg.uniform.offset, 1 / this.width, 1 / this.height);
+    this.draw(compProg);
+  }
+
+  blur(val) {
+    var compProg = this.compiledPrograms.get("blur");
+    if (!compProg) {
+      compProg = this.compileProgram(null, fsBlur);
+      this.compiledPrograms.set("blur", compProg);
+    }
+
+    var x = val / this.canvas.width,
+      y = val / this.canvas.height;
+
+    this.gl.useProgram(compProg.program);
+
+    this.gl.uniform2f(compProg.uniform.u_size, 0, x);
+    this.draw(compProg, !0);
+
+    this.gl.uniform2f(compProg.uniform.u_size, y, 0);
+    this.draw(compProg, !1);
   }
 
   vignette(val) {
