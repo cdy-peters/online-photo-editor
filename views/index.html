@@ -49,20 +49,11 @@
         <div id="editOptions" hidden>
             <!-- Tabs -->
             <div id="tab">
-                <button id="filters-tab" class="tablinks btn-active">Filters</button>
-                <button id="light-tab" class="tablinks">Light</button>
-                <button id="color-tab" class="tablinks">Color</button>
-                <button id="detail-tab" class="tablinks">Detail</button>
-                <button id="effects-tab" class="tablinks">Effects</button>
+                <button id="light-tab" class="tablinks btn-active" onclick="openTab(event, 'light')">Light</button>
+                <button id="color-tab" class="tablinks" onclick="openTab(event, 'color')">Color</button>
             </div>
 
-            <div class="tabcontent" id="filters">
-                <button id="grayscale">Grayscale</button>
-                <button id="sepia">Sepia</button>
-                <button id="invert">Invert</button>
-            </div>
-
-            <div class="tabcontent" id="light" hidden>
+            <div class="tabcontent" id="light">
                 <div class="input-range">
                     <label for="exposure">Exposure</label><br>
                     <div>
@@ -70,7 +61,7 @@
                         <input type="range" id="exposure" min="-1" max="1" step="0.01" value="0">
                     </div>
                 </div>
-
+                <!-- 
                 <div class="input-range">
                     <label for="contrast">Contrast</label><br>
                     <div>
@@ -85,7 +76,7 @@
                         <p id="gamma-value">0</p>
                         <input type="range" id="gamma" min="-1" max="1" step="0.01" value="0">
                     </div>
-                </div>
+                </div> -->
             </div>
 
             <div class="tabcontent" id="color" hidden>
@@ -96,7 +87,7 @@
                         <input type="range" id="saturation" min="-1" max="1" step="0.01" value="0">
                     </div>
                 </div>
-
+                <!-- 
                 <div class="input-range">
                     <label for="temperature">Temperature</label><br>
                     <div>
@@ -111,39 +102,10 @@
                         <p id="tint-value">0</p>
                         <input type="range" id="tint" min="-1" max="1" step="0.01" value="0">
                     </div>
-                </div>
-            </div>
-
-            <div class="tabcontent" id="detail" hidden>
-                <div class="input-range">
-                    <label for="sharpness">Sharpness</label><br>
-                    <div>
-                        <p id="sharpness-value">0</p>
-                        <input type="range" id="sharpness" min="0" max="10" step="0.1" value="0">
-                    </div>
-                </div>
-
-                <div class="input-range">
-                    <label for="blur">Blur</label><br>
-                    <div>
-                        <p id="blur-value">0</p>
-                        <input type="range" id="blur" min="0" max="10" step="0.1" value="0">
-                    </div>
-                </div>
-            </div>
-
-            <div class="tabcontent" id="effects" hidden>
-                <div class="input-range">
-                    <label for="vignette">Vignette</label><br>
-                    <div>
-                        <p id="vignette-value">0</p>
-                        <input type="range" id="vignette" min="0" max="2" step="0.01" value="0">
-                    </div>
-                </div>
+                </div> -->
             </div>
         </div>
 
-        <script src="js/webgl-utils.min.js"></script>
         <script src="js/main.min.js"></script>
         <script src="js/shaders.min.js"></script>
         <script src="js/webgl.min.js"></script>

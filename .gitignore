@@ -1,6 +1,5 @@
 config.js
 *.min.*
-vercel.json
 
 # Logs
 logs

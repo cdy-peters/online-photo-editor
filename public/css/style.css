@@ -106,7 +106,7 @@ canvas {
   display: inline-block;
   font-size: 16px;
   cursor: pointer;
-  width: calc(100% / 5);
+  width: calc(100% / 2);
 }
 
 #tab button:hover {
@@ -158,11 +158,6 @@ canvas {
   color: white;
 }
 
-.active-filter {
-  background-color: #b3b3b3 !important;
-  color: white;
-}
-
 .input-range {
   margin: 8px;
 }
@@ -181,7 +176,6 @@ canvas {
 
 input[type="range"] {
   -webkit-appearance: none;
-  appearance: none;
   width: 90%;
   height: 5px;
   background: #b3b3b3;
