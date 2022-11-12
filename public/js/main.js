@@ -59,7 +59,7 @@ const readFile = (file) => {
     if ($("#editOptions").attr("hidden")) {
       $("#imageDropzone").css("display", "none");
       $("#downloadButton").removeAttr("disabled");
-      $("#resetButton").removeAttr("disabled");
+      $("#reset").removeAttr("disabled");
       $("#editOptions").removeAttr("hidden");
       $("#canvasContainer").removeAttr("hidden");
     }

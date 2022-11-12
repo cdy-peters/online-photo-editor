@@ -7,6 +7,16 @@ const render = (image) => {
   render.compileProgram(null, fsSource);
   render.draw();
 
+  $("#reset").click(function () {
+    resetValues();
+
+    render.reset();
+
+    render.apply(image);
+    render.compileProgram(null, fsSource);
+    render.draw();
+  });
+
   $("#exposure").on("input", (e) => {
     var val = e.target.value;
     render.addShader("exposure", val);
@@ -60,6 +70,18 @@ const render = (image) => {
     render.addShader("vignette", val);
     render.apply(image);
   });
+};
+
+const resetValues = () => {
+  $("#exposure").val(0);
+  $("#contrast").val(0);
+  $("#gamma").val(0);
+  $("#saturation").val(0);
+  $("#temperature").val(0);
+  $("#tint").val(0);
+  $("#sharpness").val(0);
+  $("#blur").val(0);
+  $("#vignette").val(0);
 };
 
 class Program {
@@ -126,6 +148,14 @@ class Program {
       qualifiers
     );
   }
+
+  delete(gl) {
+    gl.deleteProgram(this.program),
+      this.texture.forEach(function (i) {
+        i.delete(gl);
+      }),
+      this.texture.clear();
+  }
 }
 
 class Init {
@@ -187,6 +217,23 @@ class Init {
       case "vignette":
         return this.vignette(val);
     }
+  }
+
+  reset() {
+    (this.edits = []),
+      this.compiledPrograms.forEach(function (e) {
+        e.delete(this.gl);
+      }, this),
+      this.compiledPrograms.clear(),
+      this.sourceTexture &&
+        ((this.activeSourceTexture = void 0),
+        this.sourceTexture.delete(this.gl),
+        (this.sourceTexture = null));
+    for (let e in this.tempFramebuffers) {
+      this.tempFramebuffers[e].delete(this.gl);
+    }
+    this.tempFramebuffers = {};
+    // this.drawShader = 0;
   }
 
   apply(image, t = !1) {
@@ -567,7 +614,7 @@ class Texture {
 
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
   }
-  deleteTexture(gl) {
+  delete(gl) {
     gl.deleteTexture(this.texture);
   }
 }
