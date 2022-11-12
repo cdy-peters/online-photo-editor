@@ -13,6 +13,18 @@ const render = (image) => {
     render.apply(image);
   });
 
+  $("#contrast").on("input", (e) => {
+    var val = e.target.value;
+    render.addShader("contrast", val);
+    render.apply(image);
+  });
+
+  $("#gamma").on("input", (e) => {
+    var val = e.target.value;
+    render.addShader("gamma", val);
+    render.apply(image);
+  });
+
   $("#saturation").on("input", (e) => {
     var val = e.target.value;
     render.addShader("saturation", val);
@@ -128,6 +140,10 @@ class Init {
     switch (shader) {
       case "exposure":
         return this.exposure(val);
+      case "contrast":
+        return this.contrast(val);
+      case "gamma":
+        return this.gamma(val);
       case "saturation":
         return this.saturation(val);
     }
@@ -351,6 +367,34 @@ class Init {
     this.gl.useProgram(compProg.program);
 
     this.gl.uniform1f(compProg.uniform.u_exposure, val);
+
+    this.draw(compProg);
+  }
+
+  contrast(val) {
+    var compProg = this.compiledPrograms.get("contrast");
+    if (!compProg) {
+      compProg = this.compileProgram(null, fsContrast);
+      this.compiledPrograms.set("contrast", compProg);
+    }
+
+    this.gl.useProgram(compProg.program);
+
+    this.gl.uniform1f(compProg.uniform.u_contrast, val);
+
+    this.draw(compProg);
+  }
+
+  gamma(val) {
+    var compProg = this.compiledPrograms.get("gamma");
+    if (!compProg) {
+      compProg = this.compileProgram(null, fsGamma);
+      this.compiledPrograms.set("gamma", compProg);
+    }
+
+    this.gl.useProgram(compProg.program);
+
+    this.gl.uniform1f(compProg.uniform.u_gamma, val);
 
     this.draw(compProg);
   }

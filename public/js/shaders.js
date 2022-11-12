@@ -26,6 +26,7 @@ const fsSource = `
   }
 `;
 
+// Light
 const fsExposure = `
   precision highp float;
 
@@ -45,6 +46,47 @@ const fsExposure = `
   }
 `;
 
+const fsContrast = `
+  precision highp float;
+
+  uniform sampler2D u_image;
+  uniform float u_contrast;
+
+  varying vec2 v_texCoord;
+
+  vec3 adjustContrast(vec3 color, float contrast) {
+    contrast += 1.0;
+    return (color - 0.5) * contrast + 0.5;
+  }
+
+  void main() {
+    vec4 color = texture2D(u_image, v_texCoord);
+    color.rgb = adjustContrast(color.rgb, u_contrast);
+    gl_FragColor = color;
+  }
+`;
+
+const fsGamma = `
+  precision highp float;
+
+  uniform sampler2D u_image;
+  uniform float u_gamma;
+
+  varying vec2 v_texCoord;
+
+  vec3 adjustGamma(vec3 color, float gamma) {
+    gamma += 1.0;
+    return pow(color, vec3(1.0 / gamma));
+  }
+
+  void main() {
+    vec4 color = texture2D(u_image, v_texCoord);
+    color.rgb = adjustGamma(color.rgb, u_gamma);
+    gl_FragColor = color;
+  }
+`;
+
+// Color
 const fsSaturation = `
   precision highp float;
 
