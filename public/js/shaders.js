@@ -151,3 +151,25 @@ const fsTint = `
     gl_FragColor = color;
   }
 `;
+
+// Effects
+const fsVignette = `
+  precision highp float;
+
+  uniform sampler2D u_image;
+  uniform float u_vignette;
+
+  varying vec2 v_texCoord;
+
+  vec3 vignette(vec3 color, float vignette) {
+    float dist = distance(v_texCoord, vec2(0.5));
+    float intensity = smoothstep(0.8, 0.0, dist * vignette);
+    return color * intensity;
+  }
+
+  void main() {
+    vec4 color = texture2D(u_image, v_texCoord);
+    color.rgb = vignette(color.rgb, u_vignette);
+    gl_FragColor = color;
+  }
+`;

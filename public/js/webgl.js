@@ -42,6 +42,12 @@ const render = (image) => {
     render.addShader("tint", val);
     render.apply(image);
   });
+
+  $("#vignette").on("input", (e) => {
+    var val = e.target.value;
+    render.addShader("vignette", val);
+    render.apply(image);
+  });
 };
 
 class Program {
@@ -162,6 +168,8 @@ class Init {
         return this.temperature(val);
       case "tint":
         return this.tint(val);
+      case "vignette":
+        return this.vignette(val);
     }
   }
 
@@ -452,6 +460,20 @@ class Init {
     this.gl.useProgram(compProg.program);
 
     this.gl.uniform1f(compProg.uniform.u_tint, val);
+
+    this.draw(compProg);
+  }
+
+  vignette(val) {
+    var compProg = this.compiledPrograms.get("vignette");
+    if (!compProg) {
+      compProg = this.compileProgram(null, fsVignette);
+      this.compiledPrograms.set("vignette", compProg);
+    }
+
+    this.gl.useProgram(compProg.program);
+
+    this.gl.uniform1f(compProg.uniform.u_vignette, val);
 
     this.draw(compProg);
   }

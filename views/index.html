@@ -51,6 +51,7 @@
             <div id="tab">
                 <button id="light-tab" class="tablinks btn-active" onclick="openTab(event, 'light')">Light</button>
                 <button id="color-tab" class="tablinks" onclick="openTab(event, 'color')">Color</button>
+                <button id="effects-tab" class="tablinks" onclick="openTab(event, 'effects')">Effects</button>
             </div>
 
             <div class="tabcontent" id="light">
@@ -101,6 +102,16 @@
                     <div>
                         <p id="tint-value">0</p>
                         <input type="range" id="tint" min="-1" max="1" step="0.01" value="0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="tabcontent" id="effects" hidden>
+                <div class="input-range">
+                    <label for="vignette">Vignette</label><br>
+                    <div>
+                        <p id="vignette-value">0</p>
+                        <input type="range" id="vignette" min="0" max="2" step="0.01" value="0">
                     </div>
                 </div>
             </div>
