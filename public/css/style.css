@@ -106,7 +106,7 @@ canvas {
   display: inline-block;
   font-size: 16px;
   cursor: pointer;
-  width: calc(100% / 3);
+  width: calc(100% / 4);
 }
 
 #tab button:hover {

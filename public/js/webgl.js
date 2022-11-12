@@ -43,6 +43,12 @@ const render = (image) => {
     render.apply(image);
   });
 
+  $("#sharpness").on("input", (e) => {
+    var val = e.target.value;
+    render.addShader("sharpness", val);
+    render.apply(image);
+  });
+
   $("#vignette").on("input", (e) => {
     var val = e.target.value;
     render.addShader("vignette", val);
@@ -168,6 +174,8 @@ class Init {
         return this.temperature(val);
       case "tint":
         return this.tint(val);
+      case "sharpness":
+        return this.sharpness(val);
       case "vignette":
         return this.vignette(val);
     }
@@ -462,6 +470,22 @@ class Init {
     this.gl.uniform1f(compProg.uniform.u_tint, val);
 
     this.draw(compProg);
+  }
+
+  sharpness(val) {
+    var compProg = this.compiledPrograms.get("sharpness");
+    if (!compProg) {
+      compProg = this.compileProgram(null, fsSharpness);
+      this.compiledPrograms.set("sharpness", compProg);
+    }
+
+    this.gl.useProgram(compProg.program);
+
+    const kernel = new Float32Array([0, -1, 0, -1, 5, -1, 0, -1, 0]);
+    this.gl.uniform1fv(compProg.uniform.kernel, kernel),
+      this.gl.uniform1f(compProg.uniform.u_sharpness, val);
+    this.gl.uniform2f(compProg.uniform.offset, 1 / this.width, 1 / this.height),
+      this.draw(compProg);
   }
 
   vignette(val) {

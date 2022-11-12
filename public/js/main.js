@@ -78,10 +78,13 @@ const initValues = () => {
 
 // Tabs
 var prevTab = "light";
-const openTab = (e, tab) => {
+$(".tablinks").on("click", (e) => {
+  var tab = e.target.id.split("-")[0];
+
   $(`#${prevTab}`).hide();
   $(`#${prevTab}-tab`).removeClass("btn-active");
   $(`#${tab}`).show();
   $(`#${tab}-tab`).addClass("btn-active");
+
   prevTab = tab;
-};
+});

@@ -152,6 +152,38 @@ const fsTint = `
   }
 `;
 
+// Details
+const fsSharpness = `
+  precision highp float;
+
+  uniform sampler2D u_image;
+  uniform float u_sharpness;
+  uniform vec2 offset;
+  uniform float kernel[9];
+
+  varying vec2 v_texCoord;
+
+  void main() {
+    float sharpness = u_sharpness / 10.0;
+
+    vec4 a11 = texture2D(u_image, v_texCoord - offset);
+    vec4 a12 = texture2D(u_image, vec2(v_texCoord.x, v_texCoord.y - offset.y));
+    vec4 a13 = texture2D(u_image, vec2(v_texCoord.x + offset.x, v_texCoord.y - offset.y));
+    vec4 a21 = texture2D(u_image, vec2(v_texCoord.x - offset.x, v_texCoord.y));
+    vec4 a22 = texture2D(u_image, v_texCoord);
+    vec4 a23 = texture2D(u_image, vec2(v_texCoord.x + offset.x, v_texCoord.y));
+    vec4 a31 = texture2D(u_image, vec2(v_texCoord.x - offset.x, v_texCoord.y + offset.y));
+    vec4 a32 = texture2D(u_image, vec2(v_texCoord.x, v_texCoord.y + offset.y));
+    vec4 a33 = texture2D(u_image, v_texCoord + offset);
+
+    vec4 color = a11 * kernel[0] + a12 * kernel[1] + a13 * kernel[2] +
+                  a21 * kernel[3] + a22 * kernel[4] + a23 * kernel[5] +
+                  a31 * kernel[6] + a32 * kernel[7] + a33 * kernel[8];
+
+    gl_FragColor = color * sharpness + a22 * (1.0 - sharpness);
+  }
+`;
+
 // Effects
 const fsVignette = `
   precision highp float;
