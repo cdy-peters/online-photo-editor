@@ -30,6 +30,18 @@ const render = (image) => {
     render.addShader("saturation", val);
     render.apply(image);
   });
+
+  $("#temperature").on("input", (e) => {
+    var val = e.target.value;
+    render.addShader("temperature", val);
+    render.apply(image);
+  });
+
+  $("#tint").on("input", (e) => {
+    var val = e.target.value;
+    render.addShader("tint", val);
+    render.apply(image);
+  });
 };
 
 class Program {
@@ -146,6 +158,10 @@ class Init {
         return this.gamma(val);
       case "saturation":
         return this.saturation(val);
+      case "temperature":
+        return this.temperature(val);
+      case "tint":
+        return this.tint(val);
     }
   }
 
@@ -408,6 +424,34 @@ class Init {
     this.gl.useProgram(compProg.program);
 
     this.gl.uniform1f(compProg.uniform.u_saturation, val);
+
+    this.draw(compProg);
+  }
+
+  temperature(val) {
+    var compProg = this.compiledPrograms.get("temperature");
+    if (!compProg) {
+      compProg = this.compileProgram(null, fsTemperature);
+      this.compiledPrograms.set("temperature", compProg);
+    }
+
+    this.gl.useProgram(compProg.program);
+
+    this.gl.uniform1f(compProg.uniform.u_temperature, val);
+
+    this.draw(compProg);
+  }
+
+  tint(val) {
+    var compProg = this.compiledPrograms.get("tint");
+    if (!compProg) {
+      compProg = this.compileProgram(null, fsTint);
+      this.compiledPrograms.set("tint", compProg);
+    }
+
+    this.gl.useProgram(compProg.program);
+
+    this.gl.uniform1f(compProg.uniform.u_tint, val);
 
     this.draw(compProg);
   }

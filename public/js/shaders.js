@@ -107,3 +107,47 @@ const fsSaturation = `
     gl_FragColor = color;
   }
 `;
+
+const fsTemperature = `
+  precision highp float;
+
+  uniform sampler2D u_image;
+  uniform float u_temperature;
+
+  varying vec2 v_texCoord;
+
+  vec3 adjustTemperature(vec3 color, float temperature) {
+    temperature /= 2.0;
+    color.r = color.r + temperature;
+    color.b = color.b - temperature;
+    return clamp(color, 0.0, 1.0);
+  }
+
+  void main() {
+    vec4 color = texture2D(u_image, v_texCoord);
+    color.rgb = adjustTemperature(color.rgb, u_temperature);
+    gl_FragColor = color;
+  }
+`;
+
+const fsTint = `
+  precision highp float;
+
+  uniform sampler2D u_image;
+  uniform float u_tint;
+
+  varying vec2 v_texCoord;
+
+  vec3 adjustTint(vec3 color, float tint) {
+    tint /= 2.0;
+    color.r = color.r + tint;
+    color.g = color.g - tint;
+    return clamp(color, 0.0, 1.0);
+  }
+
+  void main() {
+    vec4 color = texture2D(u_image, v_texCoord);
+    color.rgb = adjustTint(color.rgb, u_tint);
+    gl_FragColor = color;
+  }
+`;
