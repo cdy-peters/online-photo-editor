@@ -19,54 +19,81 @@ const render = (image) => {
 
   $("#exposure").on("input", (e) => {
     var val = e.target.value;
+
+    $("#exposure-value").text(val);
+
     render.addShader("exposure", val);
     render.apply(image);
   });
 
   $("#contrast").on("input", (e) => {
     var val = e.target.value;
+
+    $("#contrast-value").text(val);
+
     render.addShader("contrast", val);
     render.apply(image);
   });
 
   $("#gamma").on("input", (e) => {
     var val = e.target.value;
+
+    $("#gamma-value").text(val);
+
     render.addShader("gamma", val);
     render.apply(image);
   });
 
   $("#saturation").on("input", (e) => {
     var val = e.target.value;
+
+    $("#saturation-value").text(val);
+
     render.addShader("saturation", val);
     render.apply(image);
   });
 
   $("#temperature").on("input", (e) => {
     var val = e.target.value;
+
+    $("#temperature-value").text(val);
+
     render.addShader("temperature", val);
     render.apply(image);
   });
 
   $("#tint").on("input", (e) => {
     var val = e.target.value;
+
+    $("#tint-value").text(val);
+
     render.addShader("tint", val);
     render.apply(image);
   });
 
   $("#sharpness").on("input", (e) => {
     var val = e.target.value;
+
+    $("#sharpness-value").text(val);
+
     render.addShader("sharpness", val);
     render.apply(image);
   });
 
   $("#blur").on("input", (e) => {
     var val = e.target.value;
+
+    $("#blur-value").text(val);
+
     render.addShader("blur", val);
     render.apply(image);
   });
 
   $("#vignette").on("input", (e) => {
     var val = e.target.value;
+
+    $("#vignette-value").text(val);
+
     render.addShader("vignette", val);
     render.apply(image);
   });
@@ -74,14 +101,31 @@ const render = (image) => {
 
 const resetValues = () => {
   $("#exposure").val(0);
+  $("#exposure-value").text(0);
+
   $("#contrast").val(0);
+  $("#contrast-value").text(0);
+
   $("#gamma").val(0);
+  $("#gamma-value").text(0);
+
   $("#saturation").val(0);
+  $("#saturation-value").text(0);
+
   $("#temperature").val(0);
+  $("#temperature-value").text(0);
+
   $("#tint").val(0);
+  $("#tint-value").text(0);
+
   $("#sharpness").val(0);
+  $("#sharpness-value").text(0);
+
   $("#blur").val(0);
+  $("#blur-value").text(0);
+
   $("#vignette").val(0);
+  $("#vignette-value").text(0);
 };
 
 class Program {
