@@ -55,7 +55,8 @@ $(".input-range").on("input", (e) => {
 
   $(`#${id}-value`).text(val);
 
-  render.addShader(id, val);
+  val == 0 ? render.removeShader(id) : render.addShader(id, val);
+
   render.apply(image);
 });
 
