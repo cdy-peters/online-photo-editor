@@ -1,43 +1,17 @@
 "use strict";
 
-const render = (image) => {
-  var render = new Init();
+var render = null;
+
+const renderImage = (image) => {
+  if (render) {
+    resetValues();
+    render = null;
+  }
+  render = new Init();
 
   render.apply(image);
   render.compileProgram(null, fsSource);
   render.draw();
-
-  $("#reset").click(function () {
-    resetValues();
-
-    render.reset();
-
-    render.apply(image);
-  });
-
-  $(".filter").on("click", (e) => {
-    const filter = e.target.id;
-
-    var val = render.getShader("filter");
-
-    val == filter
-      ? render.removeShader("filter")
-      : render.addShader("filter", filter);
-    if (val !== filter) $(`#${val}`).removeClass("filter-active");
-    $(`#${filter}`).toggleClass("filter-active");
-
-    render.apply(image);
-  });
-
-  $(".input-range").on("input", (e) => {
-    var id = e.target.id;
-    var val = e.target.value;
-
-    $(`#${id}-value`).text(val);
-
-    render.addShader(id, val);
-    render.apply(image);
-  });
 };
 
 const resetValues = () => {
@@ -46,6 +20,38 @@ const resetValues = () => {
   $(".input-range > input").val(0);
   $(".input-range > p").text(0);
 };
+
+$("#reset").click(() => {
+  resetValues();
+
+  render.reset();
+
+  render.apply(image);
+});
+
+$(".filter").on("click", (e) => {
+  const filter = e.target.id;
+
+  var val = render.getShader("filter");
+
+  val == filter
+    ? render.removeShader("filter")
+    : render.addShader("filter", filter);
+  if (val !== filter) $(`#${val}`).removeClass("filter-active");
+  $(`#${filter}`).toggleClass("filter-active");
+
+  render.apply(image);
+});
+
+$(".input-range").on("input", (e) => {
+  var id = e.target.id;
+  var val = e.target.value;
+
+  $(`#${id}-value`).text(val);
+
+  render.addShader(id, val);
+  render.apply(image);
+});
 
 class Program {
   constructor(gl, vs, fs) {
@@ -114,7 +120,7 @@ class Program {
 
   delete(gl) {
     gl.deleteProgram(this.program),
-      this.texture.forEach(function (i) {
+      this.texture.forEach((i) => {
         i.delete(gl);
       }),
       this.texture.clear();
@@ -204,7 +210,7 @@ class Init {
 
   reset() {
     (this.edits = []),
-      this.compiledPrograms.forEach(function (i) {
+      this.compiledPrograms.forEach((i) => {
         i.delete(this.gl);
       }, this),
       this.compiledPrograms.clear(),

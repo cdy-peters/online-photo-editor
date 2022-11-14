@@ -50,7 +50,7 @@ const readFile = (file) => {
       image.src = e.target.result;
 
       image.onload = function () {
-        render(image);
+        renderImage(image);
       };
     };
 
@@ -66,14 +66,6 @@ const readFile = (file) => {
   } else {
     alert("Invalid file type, file must be a PNG or JPEG");
   }
-};
-
-const initValues = () => {
-  $("#exposure").val(edits.exposure);
-  $("#exposure-value").text(edits.exposure);
-
-  $("#saturation").val(edits.saturation);
-  $("#saturation-value").text(edits.saturation);
 };
 
 // Tabs
