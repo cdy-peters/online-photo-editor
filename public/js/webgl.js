@@ -29,84 +29,13 @@ const render = (image) => {
     render.apply(image);
   });
 
-  $("#exposure").on("input", (e) => {
+  $(".input-range").on("input", (e) => {
+    var id = e.target.id;
     var val = e.target.value;
 
-    $("#exposure-value").text(val);
+    $(`#${id}-value`).text(val);
 
-    render.addShader("exposure", val);
-    render.apply(image);
-  });
-
-  $("#contrast").on("input", (e) => {
-    var val = e.target.value;
-
-    $("#contrast-value").text(val);
-
-    render.addShader("contrast", val);
-    render.apply(image);
-  });
-
-  $("#gamma").on("input", (e) => {
-    var val = e.target.value;
-
-    $("#gamma-value").text(val);
-
-    render.addShader("gamma", val);
-    render.apply(image);
-  });
-
-  $("#saturation").on("input", (e) => {
-    var val = e.target.value;
-
-    $("#saturation-value").text(val);
-
-    render.addShader("saturation", val);
-    render.apply(image);
-  });
-
-  $("#temperature").on("input", (e) => {
-    var val = e.target.value;
-
-    $("#temperature-value").text(val);
-
-    render.addShader("temperature", val);
-    render.apply(image);
-  });
-
-  $("#tint").on("input", (e) => {
-    var val = e.target.value;
-
-    $("#tint-value").text(val);
-
-    render.addShader("tint", val);
-    render.apply(image);
-  });
-
-  $("#sharpness").on("input", (e) => {
-    var val = e.target.value;
-
-    $("#sharpness-value").text(val);
-
-    render.addShader("sharpness", val);
-    render.apply(image);
-  });
-
-  $("#blur").on("input", (e) => {
-    var val = e.target.value;
-
-    $("#blur-value").text(val);
-
-    render.addShader("blur", val);
-    render.apply(image);
-  });
-
-  $("#vignette").on("input", (e) => {
-    var val = e.target.value;
-
-    $("#vignette-value").text(val);
-
-    render.addShader("vignette", val);
+    render.addShader(id, val);
     render.apply(image);
   });
 };
@@ -114,32 +43,8 @@ const render = (image) => {
 const resetValues = () => {
   $(".filter").removeClass("filter-active");
 
-  $("#exposure").val(0);
-  $("#exposure-value").text(0);
-
-  $("#contrast").val(0);
-  $("#contrast-value").text(0);
-
-  $("#gamma").val(0);
-  $("#gamma-value").text(0);
-
-  $("#saturation").val(0);
-  $("#saturation-value").text(0);
-
-  $("#temperature").val(0);
-  $("#temperature-value").text(0);
-
-  $("#tint").val(0);
-  $("#tint-value").text(0);
-
-  $("#sharpness").val(0);
-  $("#sharpness-value").text(0);
-
-  $("#blur").val(0);
-  $("#blur-value").text(0);
-
-  $("#vignette").val(0);
-  $("#vignette-value").text(0);
+  $(".input-range > input").val(0);
+  $(".input-range > p").text(0);
 };
 
 class Program {
@@ -543,14 +448,31 @@ class Init {
     this.draw(compProg);
   }
 
-  exposure(val) {
-    var compProg = this.compiledPrograms.get("exposure");
+  getCompiledProgram(edit) {
+    const fsEdit = {
+      exposure: fsExposure,
+      contrast: fsContrast,
+      gamma: fsGamma,
+      saturation: fsSaturation,
+      temperature: fsTemperature,
+      tint: fsTint,
+      sharpness: fsSharpness,
+      blur: fsBlur,
+      vignette: fsVignette,
+    };
+
+    var compProg = this.compiledPrograms.get(edit);
     if (!compProg) {
-      compProg = this.compileProgram(null, fsExposure);
-      this.compiledPrograms.set("exposure", compProg);
+      compProg = this.compileProgram(null, fsEdit[edit]);
+      this.compiledPrograms.set(edit, compProg);
     }
 
     this.gl.useProgram(compProg.program);
+    return compProg;
+  }
+
+  exposure(val) {
+    const compProg = this.getCompiledProgram("exposure");
 
     this.gl.uniform1f(compProg.uniform.u_exposure, val);
 
@@ -558,13 +480,7 @@ class Init {
   }
 
   contrast(val) {
-    var compProg = this.compiledPrograms.get("contrast");
-    if (!compProg) {
-      compProg = this.compileProgram(null, fsContrast);
-      this.compiledPrograms.set("contrast", compProg);
-    }
-
-    this.gl.useProgram(compProg.program);
+    const compProg = this.getCompiledProgram("contrast");
 
     this.gl.uniform1f(compProg.uniform.u_contrast, val);
 
@@ -572,13 +488,7 @@ class Init {
   }
 
   gamma(val) {
-    var compProg = this.compiledPrograms.get("gamma");
-    if (!compProg) {
-      compProg = this.compileProgram(null, fsGamma);
-      this.compiledPrograms.set("gamma", compProg);
-    }
-
-    this.gl.useProgram(compProg.program);
+    const compProg = this.getCompiledProgram("gamma");
 
     this.gl.uniform1f(compProg.uniform.u_gamma, val);
 
@@ -586,12 +496,7 @@ class Init {
   }
 
   saturation(val) {
-    var compProg = this.compiledPrograms.get("saturation");
-    if (!compProg) {
-      compProg = this.compileProgram(null, fsSaturation);
-      this.compiledPrograms.set("saturation", compProg);
-    }
-    this.gl.useProgram(compProg.program);
+    const compProg = this.getCompiledProgram("saturation");
 
     this.gl.uniform1f(compProg.uniform.u_saturation, val);
 
@@ -599,13 +504,7 @@ class Init {
   }
 
   temperature(val) {
-    var compProg = this.compiledPrograms.get("temperature");
-    if (!compProg) {
-      compProg = this.compileProgram(null, fsTemperature);
-      this.compiledPrograms.set("temperature", compProg);
-    }
-
-    this.gl.useProgram(compProg.program);
+    const compProg = this.getCompiledProgram("temperature");
 
     this.gl.uniform1f(compProg.uniform.u_temperature, val);
 
@@ -613,13 +512,7 @@ class Init {
   }
 
   tint(val) {
-    var compProg = this.compiledPrograms.get("tint");
-    if (!compProg) {
-      compProg = this.compileProgram(null, fsTint);
-      this.compiledPrograms.set("tint", compProg);
-    }
-
-    this.gl.useProgram(compProg.program);
+    const compProg = this.getCompiledProgram("tint");
 
     this.gl.uniform1f(compProg.uniform.u_tint, val);
 
@@ -627,13 +520,7 @@ class Init {
   }
 
   sharpness(val) {
-    var compProg = this.compiledPrograms.get("sharpness");
-    if (!compProg) {
-      compProg = this.compileProgram(null, fsSharpness);
-      this.compiledPrograms.set("sharpness", compProg);
-    }
-
-    this.gl.useProgram(compProg.program);
+    const compProg = this.getCompiledProgram("sharpness");
 
     const kernel = new Float32Array([0, -1, 0, -1, 5, -1, 0, -1, 0]);
     this.gl.uniform1fv(compProg.uniform.kernel, kernel);
@@ -643,16 +530,10 @@ class Init {
   }
 
   blur(val) {
-    var compProg = this.compiledPrograms.get("blur");
-    if (!compProg) {
-      compProg = this.compileProgram(null, fsBlur);
-      this.compiledPrograms.set("blur", compProg);
-    }
+    const compProg = this.getCompiledProgram("blur");
 
     var x = val / this.canvas.width,
       y = val / this.canvas.height;
-
-    this.gl.useProgram(compProg.program);
 
     this.gl.uniform2f(compProg.uniform.u_size, 0, x);
     this.draw(compProg, !0);
@@ -662,13 +543,7 @@ class Init {
   }
 
   vignette(val) {
-    var compProg = this.compiledPrograms.get("vignette");
-    if (!compProg) {
-      compProg = this.compileProgram(null, fsVignette);
-      this.compiledPrograms.set("vignette", compProg);
-    }
-
-    this.gl.useProgram(compProg.program);
+    const compProg = this.getCompiledProgram("vignette");
 
     this.gl.uniform1f(compProg.uniform.u_vignette, val);
 
