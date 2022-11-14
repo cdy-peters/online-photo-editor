@@ -15,29 +15,13 @@ const render = (image) => {
     render.apply(image);
   });
 
-  $("#grayscale").click(() => {
-    var val = render.getShader("grayscale");
+  $(".filter").on("click", (e) => {
+    const filter = e.target.id;
 
-    !val ? render.addShader("grayscale", 1) : render.removeShader("grayscale");
-    $("#grayscale").toggleClass("filter-active");
+    var val = render.getShader(filter);
 
-    render.apply(image);
-  });
-
-  $("#sepia").click(() => {
-    var val = render.getShader("sepia");
-
-    !val ? render.addShader("sepia", 1) : render.removeShader("sepia");
-    $("#sepia").toggleClass("filter-active");
-
-    render.apply(image);
-  });
-
-  $("#invert").click(() => {
-    var val = render.getShader("invert");
-
-    !val ? render.addShader("invert", 1) : render.removeShader("invert");
-    $("#invert").toggleClass("filter-active");
+    !val ? render.addShader(filter, 1) : render.removeShader(filter);
+    $(`#${filter}`).toggleClass("filter-active");
 
     render.apply(image);
   });
@@ -125,9 +109,7 @@ const render = (image) => {
 };
 
 const resetValues = () => {
-  $("#grayscale").removeClass("filter-active");
-  $("#sepia").removeClass("filter-active");
-  $("#invert").removeClass("filter-active");
+  $(".filter").removeClass("filter-active");
 
   $("#exposure").val(0);
   $("#exposure-value").text(0);
@@ -290,11 +272,9 @@ class Init {
   runShader(shader, val) {
     switch (shader) {
       case "grayscale":
-        return this.grayscale();
       case "sepia":
-        return this.sepia();
       case "invert":
-        return this.invert();
+        return this.filter(shader);
       case "exposure":
         return this.exposure(val);
       case "contrast":
@@ -544,35 +524,17 @@ class Init {
   }
 
   // ------------------ Shaders ------------------
-  grayscale() {
-    var compProg = this.compiledPrograms.get("grayscale");
+  filter(filter) {
+    const fsFilter = {
+      grayscale: fsGrayscale,
+      sepia: fsSepia,
+      invert: fsInvert,
+    };
+
+    var compProg = this.compiledPrograms.get(filter);
     if (!compProg) {
-      compProg = this.compileProgram(null, fsGrayscale);
-      this.compiledPrograms.set("grayscale", compProg);
-    }
-
-    this.gl.useProgram(compProg.program);
-
-    this.draw(compProg);
-  }
-
-  sepia() {
-    var compProg = this.compiledPrograms.get("sepia");
-    if (!compProg) {
-      compProg = this.compileProgram(null, fsSepia);
-      this.compiledPrograms.set("sepia", compProg);
-    }
-
-    this.gl.useProgram(compProg.program);
-
-    this.draw(compProg);
-  }
-
-  invert() {
-    var compProg = this.compiledPrograms.get("invert");
-    if (!compProg) {
-      compProg = this.compileProgram(null, fsInvert);
-      this.compiledPrograms.set("invert", compProg);
+      compProg = this.compileProgram(null, fsFilter[filter]);
+      this.compiledPrograms.set(filter, compProg);
     }
 
     this.gl.useProgram(compProg.program);
