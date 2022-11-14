@@ -53,7 +53,7 @@ $(".input-range").on("input", (e) => {
   var id = e.target.id;
   var val = e.target.value;
 
-  $(`#${id}-value`).text(val);
+  $(`#${id}-value`).text(parseInt(val * 100));
 
   val == 0 ? render.removeShader(id) : render.addShader(id, val);
 

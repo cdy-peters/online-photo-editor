@@ -207,7 +207,7 @@ const fsSharpness = `
   varying vec2 v_texCoord;
 
   void main() {
-    float sharpness = u_sharpness / 10.0;
+    float sharpness = u_sharpness;
 
     vec4 a11 = texture2D(u_image, v_texCoord - offset);
     vec4 a12 = texture2D(u_image, vec2(v_texCoord.x, v_texCoord.y - offset.y));
@@ -240,6 +240,8 @@ const fsBlur = `
   }
 
   void main() {
+    vec2 size = u_size * 10.0;
+
     vec4 color = vec4(0.0);
     float total = 0.0;
     float offset = random(vec3(12.9898, 78.233, 151.7182), 0.0);
@@ -247,7 +249,7 @@ const fsBlur = `
     for (float t = -30.0; t <= 30.0; t++) {
       float percent = (t + offset - 0.5) / 30.0;
       float weight = 1.0 - abs(percent);
-      vec4 sample = texture2D(u_image, v_texCoord + u_size * percent);
+      vec4 sample = texture2D(u_image, v_texCoord + size * percent);
       sample.rgb *= sample.a;
       color += sample * weight;
       total += weight;
