@@ -202,12 +202,12 @@ class Init {
     switch (shader) {
       case "filter":
         return this.filter(val);
+      case "brightness":
+        return this.brightness(val);
       case "exposure":
         return this.exposure(val);
       case "contrast":
         return this.contrast(val);
-      case "brightness":
-        return this.brightness(val);
       case "saturation":
         return this.saturation(val);
       case "temperature":
@@ -486,9 +486,9 @@ class Init {
 
   getCompiledProgram(edit) {
     const fsEdit = {
+      brightness: fsBrightness,
       exposure: fsExposure,
       contrast: fsContrast,
-      brightness: fsBrightness,
       saturation: fsSaturation,
       temperature: fsTemperature,
       tint: fsTint,
@@ -507,6 +507,14 @@ class Init {
     return compProg;
   }
 
+  brightness(val) {
+    const compProg = this.getCompiledProgram("brightness");
+
+    this.gl.uniform1f(compProg.uniform.u_brightness, val);
+
+    this.draw(compProg);
+  }
+
   exposure(val) {
     const compProg = this.getCompiledProgram("exposure");
 
@@ -519,14 +527,6 @@ class Init {
     const compProg = this.getCompiledProgram("contrast");
 
     this.gl.uniform1f(compProg.uniform.u_contrast, val);
-
-    this.draw(compProg);
-  }
-
-  brightness(val) {
-    const compProg = this.getCompiledProgram("brightness");
-
-    this.gl.uniform1f(compProg.uniform.u_brightness, val);
 
     this.draw(compProg);
   }

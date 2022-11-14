@@ -69,6 +69,26 @@ const fsInvert = `
 `;
 
 // Light
+const fsBrightness = `
+  precision highp float;
+
+  uniform sampler2D u_image;
+  uniform float u_brightness;
+
+  varying vec2 v_texCoord;
+
+  vec3 adjustBrightness(vec3 color, float brightness) {
+    brightness /= 2.0;
+    return color + brightness;
+  }
+
+  void main() {
+    vec4 color = texture2D(u_image, v_texCoord);
+    color.rgb = adjustBrightness(color.rgb, u_brightness);
+    gl_FragColor = color;
+  }
+`;
+
 const fsExposure = `
   precision highp float;
 
@@ -78,6 +98,7 @@ const fsExposure = `
   varying vec2 v_texCoord;
 
   vec3 adjustExposure(vec3 color, float exposure) {
+    exposure *= 1.5;
     return color * pow(2.0, exposure);
   }
 
@@ -104,26 +125,6 @@ const fsContrast = `
   void main() {
     vec4 color = texture2D(u_image, v_texCoord);
     color.rgb = adjustContrast(color.rgb, u_contrast);
-    gl_FragColor = color;
-  }
-`;
-
-const fsBrightness = `
-  precision highp float;
-
-  uniform sampler2D u_image;
-  uniform float u_brightness;
-
-  varying vec2 v_texCoord;
-
-  vec3 adjustBrightness(vec3 color, float brightness) {
-    brightness /= 2.0;
-    return color + brightness;
-  }
-
-  void main() {
-    vec4 color = texture2D(u_image, v_texCoord);
-    color.rgb = adjustBrightness(color.rgb, u_brightness);
     gl_FragColor = color;
   }
 `;
@@ -159,7 +160,7 @@ const fsTemperature = `
   varying vec2 v_texCoord;
 
   vec3 adjustTemperature(vec3 color, float temperature) {
-    temperature /= 2.0;
+    temperature /= 6.0;
     color.r = color.r + temperature;
     color.b = color.b - temperature;
     return clamp(color, 0.0, 1.0);
@@ -181,7 +182,7 @@ const fsTint = `
   varying vec2 v_texCoord;
 
   vec3 adjustTint(vec3 color, float tint) {
-    tint /= 2.0;
+    tint /= -6.0;
     color.r = color.r + tint;
     color.g = color.g - tint;
     return clamp(color, 0.0, 1.0);
