@@ -1,379 +1,630 @@
 "use strict";
 
-var capture = false;
+var render = null;
 
-const render = (image) => {
-  var thisImage = image.src;
-
-  // Get A WebGL context
-  var canvas = document.querySelector("#canvas");
-  var gl = canvas.getContext("webgl");
-  if (!gl) {
-    return;
+const renderImage = (image, filename) => {
+  if (render) {
+    resetValues();
+    render = null;
   }
+  render = new Init(filename);
 
-  // Set canvas size
-  canvas.width = image.width;
-  canvas.height = image.height;
+  render.apply(image);
+  render.compileProgram(null, fsSource);
+  render.draw();
+};
 
-  // setup GLSL program
-  const program = createProgramFromScripts(gl, vsSource, fsSource);
+const resetValues = () => {
+  $("#download").attr("disabled", "disabled");
 
-  // look up where the vertex data needs to go.
-  var positionLocation = gl.getAttribLocation(program, "a_position");
-  var texcoordLocation = gl.getAttribLocation(program, "a_texCoord");
+  $(".filter").removeClass("filter-active");
 
-  // Create a buffer to put three 2d clip space points in
-  var positionBuffer = gl.createBuffer();
-  // Bind it to ARRAY_BUFFER
-  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-  // Set a rectangle the same size as the image.
-  setRectangle(gl, 0, 0, image.width, image.height);
+  $(".input-range > input").val(0);
+  $(".input-range > p").text(0);
+};
 
-  // provide texture coordinates for the rectangle.
-  var texcoordBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
-  gl.bufferData(
-    gl.ARRAY_BUFFER,
-    new Float32Array([
-      0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0,
-    ]),
-    gl.STATIC_DRAW
-  );
+$("#download").click(() => {
+  render.download(image);
+});
 
-  // Upload the image into the texture.
-  var originalImageTexture = createAndSetTexture(gl);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+$("#reset").click(() => {
+  resetValues();
 
-  // Create 2 textures with framebuffer
-  var textures = [],
-    framebuffers = [];
+  render.reset();
 
-  for (var i = 0; i < 2; ++i) {
-    var texture = createAndSetTexture(gl);
-    textures.push(texture);
+  render.apply(image);
+});
 
-    gl.texImage2D(
-      gl.TEXTURE_2D,
-      0,
-      gl.RGBA,
-      image.width,
-      image.height,
-      0,
-      gl.RGBA,
-      gl.UNSIGNED_BYTE,
-      null
+$(".filter").on("click", (e) => {
+  const filter = e.target.id;
+
+  var val = render.getShader("filter");
+
+  val == filter
+    ? render.removeShader("filter")
+    : render.addShader("filter", filter);
+  if (val !== filter) $(`#${val}`).removeClass("filter-active");
+  $(`#${filter}`).toggleClass("filter-active");
+
+  render.apply(image);
+});
+
+$(".input-range").on("input", (e) => {
+  var id = e.target.id;
+  var val = e.target.value;
+
+  $(`#${id}-value`).text(val);
+
+  val == 0 ? render.removeShader(id) : render.addShader(id, val);
+
+  render.apply(image);
+});
+
+class Program {
+  constructor(gl, vs, fs) {
+    this.uniform = {};
+    this.attribute = {};
+    this.texture = new Map();
+
+    this.program = gl.createProgram();
+    gl.attachShader(this.program, this.compileShader(gl, gl.VERTEX_SHADER, vs));
+    gl.attachShader(
+      this.program,
+      this.compileShader(gl, gl.FRAGMENT_SHADER, fs)
     );
+    gl.linkProgram(this.program);
+    gl.useProgram(this.program);
 
-    var fbo = gl.createFramebuffer();
-    framebuffers.push(fbo);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
-
-    gl.framebufferTexture2D(
-      gl.FRAMEBUFFER,
-      gl.COLOR_ATTACHMENT0,
-      gl.TEXTURE_2D,
-      texture,
-      0
-    );
-  }
-
-  // lookup uniforms
-  var resolutionLocation = gl.getUniformLocation(program, "u_resolution"),
-    textureSizeLocation = gl.getUniformLocation(program, "u_textureSize"),
-    kernelLocation = gl.getUniformLocation(program, "u_kernel[0]"),
-    kernelWeightLocation = gl.getUniformLocation(program, "u_kernelWeight"),
-    flipYLocation = gl.getUniformLocation(program, "u_flipY");
-  var grayscaleLocation = gl.getUniformLocation(program, "u_grayscale"),
-    sepiaLocation = gl.getUniformLocation(program, "u_sepia"),
-    invertLocation = gl.getUniformLocation(program, "u_invert");
-  var exposureLocation = gl.getUniformLocation(program, "u_exposure"),
-    contrastLocation = gl.getUniformLocation(program, "u_contrast"),
-    gammaLocation = gl.getUniformLocation(program, "u_gamma");
-  var saturationLocation = gl.getUniformLocation(program, "u_saturation"),
-    temperatureLocation = gl.getUniformLocation(program, "u_temperature"),
-    tintLocation = gl.getUniformLocation(program, "u_tint");
-  var vignetteLocation = gl.getUniformLocation(program, "u_vignette");
-
-  drawEffects();
-
-  // Edit image
-  editImage(drawEffects);
-
-  function drawEffects() {
-    // Check if uploaded image has changed
-    if (thisImage != currImage) return;
-
-    // Clear the canvas
-    gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    // Tell it to use our program (pair of shaders)
-    gl.useProgram(program);
-
-    // Turn on the position attribute
-    gl.enableVertexAttribArray(positionLocation);
-
-    // Bind the position buffer.
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-
-    // Tell the position attribute how to get data out of positionBuffer (ARRAY_BUFFER)
-    var size = 2; // 2 components per iteration
-    var type = gl.FLOAT; // the data is 32bit floats
-    var normalize = false; // don't normalize the data
-    var stride = 0; // 0 = move forward size * sizeof(type) each iteration to get the next position
-    var offset = 0; // start at the beginning of the buffer
-    gl.vertexAttribPointer(
-      positionLocation,
-      size,
-      type,
-      normalize,
-      stride,
-      offset
-    );
-
-    // Turn on the texcoord attribute
-    gl.enableVertexAttribArray(texcoordLocation);
-
-    // bind the texcoord buffer.
-    gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
-
-    // Tell the texcoord attribute how to get data out of texcoordBuffer (ARRAY_BUFFER)
-    var size = 2;
-    var type = gl.FLOAT;
-    var normalize = false;
-    var stride = 0;
-    var offset = 0;
-    gl.vertexAttribPointer(
-      texcoordLocation,
-      size,
-      type,
-      normalize,
-      stride,
-      offset
-    );
-
-    // set the size of the image
-    gl.uniform2f(textureSizeLocation, image.width, image.height);
-
-    // start with the original image
-    gl.bindTexture(gl.TEXTURE_2D, originalImageTexture);
-
-    // don't y flip images while drawing to the textures
-    gl.uniform1f(flipYLocation, 1);
-
-    // loop through each effect we want to apply.
-    var count = 0;
-    if (edits.sharpness > 0) {
-      setFramebuffer(framebuffers[0], image.width, image.height);
-      drawWithKernel("sharpness");
-      gl.bindTexture(gl.TEXTURE_2D, textures[count % 2]);
-      count++;
+    const vsAttributes = this.getQualifiers(vs, "attribute");
+    for (const [attr, type] of vsAttributes) {
+      this.attribute[attr] = gl.getAttribLocation(this.program, attr);
     }
-    if (edits.blur > 0) {
-      for (var i = 0; i < edits.blur; i++) {
-        setFramebuffer(framebuffers[count % 2], image.width, image.height);
-        drawWithKernel("blur");
-        gl.bindTexture(gl.TEXTURE_2D, textures[count % 2]);
-        count++;
+
+    const uniforms = [];
+    const vsUniforms = this.getQualifiers(vs, "uniform");
+    for (const [unif, type] of vsUniforms) {
+      this.uniform[unif] = gl.getUniformLocation(this.program, unif);
+    }
+
+    const fsUniforms = this.getQualifiers(fs, "uniform");
+    for (const [unif, type] of fsUniforms) {
+      (this.uniform[unif] = gl.getUniformLocation(this.program, unif)),
+        "sampler2D" === type && uniforms.push(unif);
+    }
+
+    for (var idx in uniforms) {
+      const unif = uniforms[idx],
+        unifLoc = gl.getUniformLocation(this.program, unif);
+
+      unif === "u_image"
+        ? (gl.uniform1i(unifLoc, 0), this.texture.set(0, new Texture(unif)))
+        : (gl.uniform1i(unifLoc, 1), this.texture.set(1, new Texture(unif)));
+    }
+  }
+
+  compileShader(gl, type, s) {
+    const shader = gl.createShader(type);
+    return (
+      gl.shaderSource(shader, s),
+      gl.compileShader(shader),
+      gl.getShaderParameter(shader, gl.COMPILE_STATUS)
+        ? shader
+        : console.log(gl.getShaderInfoLog(shader))
+    );
+  }
+
+  getQualifiers(shader, qualifier) {
+    const qualifiers = [],
+      regEx = new RegExp("\\b" + qualifier + " (\\w+) (\\w+)", "ig");
+
+    return (
+      shader.replace(regEx, (shader, qualifier, regEx) => {
+        return qualifiers.push([regEx, qualifier]), shader;
+      }),
+      qualifiers
+    );
+  }
+
+  delete(gl) {
+    gl.deleteProgram(this.program),
+      this.texture.forEach((i) => {
+        i.delete(gl);
+      }),
+      this.texture.clear();
+  }
+}
+
+class Init {
+  constructor(filename) {
+    this.drawShader = 0;
+    this.width = 0;
+    this.height = 0;
+    this.lastInChain = !1;
+    this.currentFramebufferIndex = 0;
+    this.lastTextureIndex = -1;
+    this.sourceTexture = null;
+    this.tempFramebuffers = {};
+    this.vertexBuffer = null;
+    this.edits = [];
+    this.compiledPrograms = new Map();
+    this.capture = false;
+    this.filename = filename;
+    this.initContext();
+  }
+
+  initContext() {
+    this.canvas = document.getElementById("canvas");
+    this.gl = canvas.getContext("webgl", {
+      alpha: !0,
+      premultipliedAlpha: !1,
+      depth: !1,
+      stencil: !1,
+      antialias: !1,
+    });
+    if (!this.gl) console.log("Failed to get canvas context");
+  }
+
+  addShader(shader, val) {
+    if (this.edits.length == 0) {
+      $("#download").removeAttr("disabled");
+    }
+    for (var i = 0; i < this.edits.length; i++) {
+      if (this.edits[i].shader == shader) {
+        this.edits[i].value = val;
+        return;
       }
     }
+    this.edits.push(new Shader(shader, val));
+  }
 
-    // finally draw the result to the canvas.
-    gl.uniform1f(flipYLocation, -1); // need to y flip for canvas
-    setFramebuffer(null, gl.canvas.width, gl.canvas.height);
-    drawWithKernel("normal");
+  getShader(shader) {
+    for (var i = 0; i < this.edits.length; i++) {
+      if (this.edits[i].shader == shader) {
+        return this.edits[i].value;
+      }
+    }
+    return null;
+  }
 
-    // Download image
-    if (capture) {
-      capture = false;
+  removeShader(shader) {
+    for (var i = 0; i < this.edits.length; i++) {
+      if (this.edits[i].shader == shader) {
+        this.edits.splice(i, 1);
+        if (this.edits.length == 0) {
+          $("#download").attr("disabled", "disabled");
+        }
+        return;
+      }
+    }
+  }
 
-      const dataURL = canvas.toDataURL("image/png");
+  runShader(shader, val) {
+    switch (shader) {
+      case "filter":
+        return this.filter(val);
+      case "exposure":
+        return this.exposure(val);
+      case "contrast":
+        return this.contrast(val);
+      case "gamma":
+        return this.gamma(val);
+      case "saturation":
+        return this.saturation(val);
+      case "temperature":
+        return this.temperature(val);
+      case "tint":
+        return this.tint(val);
+      case "sharpness":
+        return this.sharpness(val);
+      case "blur":
+        return this.blur(val);
+      case "vignette":
+        return this.vignette(val);
+    }
+  }
+
+  download(image) {
+    this.capture = true;
+    this.apply(image);
+  }
+
+  reset() {
+    (this.edits = []),
+      this.compiledPrograms.forEach((i) => {
+        i.delete(this.gl);
+      }, this),
+      this.compiledPrograms.clear(),
+      this.sourceTexture &&
+        ((this.activeSourceTexture = void 0),
+        this.sourceTexture.delete(this.gl),
+        (this.sourceTexture = null));
+    for (var i in this.tempFramebuffers) {
+      this.tempFramebuffers[i].delete(this.gl);
+    }
+    this.tempFramebuffers = {};
+  }
+
+  apply(image, t = !1) {
+    this.resize(image.width, image.height);
+    this.drawShader = 0;
+
+    (this.sourceTexture &&
+      this.width == image.width &&
+      this.height == image.height) ||
+      (this.sourceTexture &&
+        (this.sourceTexture.delete(this.gl), (this.sourceTexture = null)),
+      (this.sourceTexture = new Texture("texture")),
+      this.sourceTexture.createTexture(this.gl));
+
+    (image !== this.activeSourceTexture || t) &&
+      (this.sourceTexture.bindTexture(this.gl, image),
+      (this.activeSourceTexture = image));
+
+    for (var i = 0; i < this.edits.length; i++) {
+      this.lastInChain = i == this.edits.length - 1;
+      this.runShader(this.edits[i].shader, this.edits[i].value);
+    }
+
+    if (this.edits.length == 0 && this.lastInChain) {
+      this.compileProgram(null, fsSource);
+      this.draw();
+    }
+
+    if (this.capture == true) {
+      this.capture = false;
+
+      const dataURL = this.gl.canvas.toDataURL("image/png");
       const link = document.createElement("a");
-      link.download = "image.png";
+      link.download = `${this.filename} - Edited.png`;
       link.href = dataURL;
       link.click();
     }
+
+    return (this.currentFramebufferIndex = 0), this.canvas;
   }
 
-  function setFramebuffer(fbo, width, height) {
-    // make this the framebuffer we are rendering to.
-    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
-
-    // Tell the shader the resolution of the framebuffer.
-    gl.uniform2f(resolutionLocation, width, height);
-
-    // Tell webgl the viewport setting needed for framebuffer.
-    gl.viewport(0, 0, width, height);
-  }
-
-  function drawWithKernel(name) {
-    // set the kernel and it's weight
-    var kernel;
-    var kernelWeight = 1;
-    if (name === "normal") {
-      kernel = [0, 0, 0, 0, 1, 0, 0, 0, 0];
-    } else if (name === "sharpness") {
-      var edge = -(edits.sharpness - 1) / 4;
-      kernel = [
-        0,
-        edge,
-        0,
-        edge,
-        parseFloat(edits.sharpness),
-        edge,
-        0,
-        edge,
-        0,
-      ];
-    } else if (name === "blur") {
-      kernel = [0.111, 0.111, 0.111, 0.111, 0.111, 0.111, 0.111, 0.111, 0.111];
-      kernelWeight = 0.999;
+  resize(imageWidth, imageHeight) {
+    if (imageWidth !== this.width || imageHeight !== this.height) {
+      if (
+        ((this.canvas.width = this.width = imageWidth),
+        (this.canvas.height = this.height = imageHeight),
+        !this.vertexBuffer)
+      ) {
+        this.vertexBuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
+        var vertices = [
+          -1, -1, 0, 0, 1, -1, 1, 0, -1, 1, 0, 1, -1, 1, 0, 1, 1, -1, 1, 0, 1,
+          1, 1, 1,
+        ];
+        this.gl.bufferData(
+          this.gl.ARRAY_BUFFER,
+          new Float32Array(vertices),
+          this.gl.STATIC_DRAW
+        );
+      }
+      this.gl.viewport(0, 0, this.width, this.height);
+      for (var i in this.tempFramebuffers) {
+        this.tempFramebuffers[i].delete(this.gl);
+      }
+      this.tempFramebuffers = {};
     }
-    gl.uniform1fv(kernelLocation, kernel);
-    gl.uniform1f(kernelWeightLocation, kernelWeight);
-
-    setUniforms();
-
-    // Draw the rectangle.
-    var primitiveType = gl.TRIANGLES;
-    var offset = 0;
-    var count = 6;
-    gl.drawArrays(primitiveType, offset, count);
   }
 
-  // Set uniforms
-  function setUniforms() {
-    gl.uniform2f(resolutionLocation, gl.canvas.width, gl.canvas.height);
-    gl.uniform2f(textureSizeLocation, image.width, image.height);
-
-    // Edits
-    gl.uniform1f(grayscaleLocation, edits.grayscale);
-    gl.uniform1f(sepiaLocation, edits.sepia);
-    gl.uniform1f(invertLocation, edits.invert);
-
-    gl.uniform1f(exposureLocation, edits.exposure);
-    gl.uniform1f(contrastLocation, edits.contrast);
-    gl.uniform1f(gammaLocation, edits.gamma);
-
-    gl.uniform1f(saturationLocation, edits.saturation);
-    gl.uniform1f(temperatureLocation, edits.temperature);
-    gl.uniform1f(tintLocation, edits.tint);
-
-    gl.uniform1f(vignetteLocation, edits.vignette);
+  getTempFramebuffer(idx) {
+    return (
+      (this.tempFramebuffers[idx] =
+        this.tempFramebuffers[idx] || this.createFramebufferTexture()),
+      this.tempFramebuffers[idx]
+    );
   }
 
-  // Edit image
-  function editImage(drawEffects) {
-    // Reset image
-    $("#resetButton").on("click", () => {
-      edits = new InitEdits();
-      initValues();
+  createFramebufferTexture() {
+    var framebuffer = this.gl.createFramebuffer();
+    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
 
-      // Remove active filter
-      if (prevFilter) {
-        $(`#${prevFilter}`).removeClass("active-filter");
-        prevFilter = null;
-      }
+    var renderbuffer = this.gl.createRenderbuffer();
+    this.gl.bindRenderbuffer(this.gl.RENDERBUFFER, renderbuffer);
+    this.gl.renderbufferStorage(
+      this.gl.RENDERBUFFER,
+      this.gl.DEPTH_COMPONENT16,
+      this.width,
+      this.height
+    );
 
-      drawEffects();
-    });
+    var texture = this.gl.createTexture();
+    return (
+      this.gl.bindTexture(this.gl.TEXTURE_2D, texture),
+      this.gl.texImage2D(
+        this.gl.TEXTURE_2D,
+        0,
+        this.gl.RGBA,
+        this.width,
+        this.height,
+        0,
+        this.gl.RGBA,
+        this.gl.UNSIGNED_BYTE,
+        null
+      ),
+      this.gl.texParameteri(
+        this.gl.TEXTURE_2D,
+        this.gl.TEXTURE_MAG_FILTER,
+        this.gl.NEAREST
+      ),
+      this.gl.texParameteri(
+        this.gl.TEXTURE_2D,
+        this.gl.TEXTURE_MIN_FILTER,
+        this.gl.NEAREST
+      ),
+      this.gl.texParameteri(
+        this.gl.TEXTURE_2D,
+        this.gl.TEXTURE_WRAP_S,
+        this.gl.CLAMP_TO_EDGE
+      ),
+      this.gl.texParameteri(
+        this.gl.TEXTURE_2D,
+        this.gl.TEXTURE_WRAP_T,
+        this.gl.CLAMP_TO_EDGE
+      ),
+      this.gl.framebufferTexture2D(
+        this.gl.FRAMEBUFFER,
+        this.gl.COLOR_ATTACHMENT0,
+        this.gl.TEXTURE_2D,
+        texture,
+        0
+      ),
+      this.gl.framebufferRenderbuffer(
+        this.gl.FRAMEBUFFER,
+        this.gl.DEPTH_ATTACHMENT,
+        this.gl.RENDERBUFFER,
+        renderbuffer
+      ),
+      this.gl.bindTexture(this.gl.TEXTURE_2D, null),
+      this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null),
+      new FramebufferTexture(framebuffer, renderbuffer, texture)
+    );
+  }
 
-    // Download image
-    $("#downloadButton").on("click", () => {
-      capture = true;
-      drawEffects();
-    });
+  draw(compProg, t = !1) {
+    if (!compProg) {
+      var compProg = new Map();
+      compProg.set(0, this.sourceTexture);
+    } else {
+      compProg = compProg.texture;
+    }
 
-    // Filters
-    $("#filters > button").on("click", (e) => {
-      if (thisImage != currImage) return;
+    if ((this.edits.length <= 1 || this.lastInChain) && !t) {
+      this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
+    } else {
+      var tempFramebuffer = this.getTempFramebuffer(
+        this.currentFramebufferIndex
+      );
 
-      if (prevFilter) {
-        edits[prevFilter] = false;
-        $(`#${prevFilter}`).removeClass("active-filter");
-      }
+      this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, tempFramebuffer.framebuffer);
+    }
 
-      const id = e.target.id;
-      if (prevFilter === id) {
-        prevFilter = null;
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+    this.gl.clearColor(0, 0, 0, 0);
+
+    this.setTexture(compProg);
+    this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
+
+    this.drawShader++;
+    this.currentFramebufferIndex = +!this.currentFramebufferIndex;
+  }
+
+  setTexture(textures) {
+    let unit = -1;
+
+    textures.forEach((texture, i) => {
+      if (
+        (this.gl.activeTexture(this.gl.TEXTURE0 + i),
+        i === 0 && this.drawShader === 0)
+      ) {
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.sourceTexture.texture);
+      } else if (i === 0) {
+        var idx = +!this.currentFramebufferIndex,
+          texture = this.getTempFramebuffer(idx);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, texture.texture);
       } else {
-        edits[id] = !edits[id];
-        prevFilter = id;
-        $(`#${id}`).addClass("active-filter");
+        this.gl.bindTexture(this.gl.TEXTURE_2D, texture.texture);
       }
+      unit = Math.max(unit, i);
+    }, this);
 
-      drawEffects();
-    });
-
-    // Light
-    $("#exposure").on("input", (e) => {
-      edits.exposure = e.target.value;
-      $("#exposure-value").text(e.target.value);
-      drawEffects();
-    });
-
-    $("#contrast").on("input", (e) => {
-      edits.contrast = e.target.value;
-      $("#contrast-value").text(e.target.value);
-      drawEffects();
-    });
-
-    $("#gamma").on("input", (e) => {
-      edits.gamma = e.target.value;
-      $("#gamma-value").text(e.target.value);
-      drawEffects();
-    });
-
-    // Color
-    $("#saturation").on("input", (e) => {
-      edits.saturation = e.target.value;
-      $("#saturation-value").text(e.target.value);
-      drawEffects();
-    });
-
-    $("#temperature").on("input", (e) => {
-      edits.temperature = e.target.value;
-      $("#temperature-value").text(e.target.value);
-      drawEffects();
-    });
-
-    $("#tint").on("input", (e) => {
-      edits.tint = e.target.value;
-      $("#tint-value").text(e.target.value);
-      drawEffects();
-    });
-
-    // Detail
-    $("#sharpness").on("input", (e) => {
-      edits.sharpness = e.target.value;
-      $("#sharpness-value").text(e.target.value);
-      drawEffects();
-    });
-
-    $("#blur").on("input", (e) => {
-      edits.blur = e.target.value;
-      $("#blur-value").text(e.target.value);
-      drawEffects();
-    });
-
-    // Effects
-    $("#vignette").on("input", (e) => {
-      edits.vignette = e.target.value;
-      $("#vignette-value").text(e.target.value);
-      drawEffects();
-    });
+    for (var i = unit + 1; i <= this.lastTextureIndex; i++) {
+      this.gl.activeTexture(this.gl.TEXTURE0 + i);
+      this.gl.bindTexture(this.gl.TEXTURE_2D, null);
+    }
+    this.lastTextureIndex = unit;
   }
-};
 
-const setRectangle = (gl, x, y, width, height) => {
-  var x1 = x;
-  var x2 = x + width;
-  var y1 = y;
-  var y2 = y + height;
-  gl.bufferData(
-    gl.ARRAY_BUFFER,
-    new Float32Array([x1, y1, x2, y1, x1, y2, x1, y2, x2, y1, x2, y2]),
-    gl.STATIC_DRAW
-  );
-};
+  compileProgram(vs, fs) {
+    var program = new Program(this.gl, (vs = vsSource), fs);
+    var i = Float32Array.BYTES_PER_ELEMENT;
+
+    return (
+      this.gl.enableVertexAttribArray(program.attribute.a_position),
+      this.gl.vertexAttribPointer(
+        program.attribute.a_position,
+        2,
+        this.gl.FLOAT,
+        !1,
+        4 * i,
+        0
+      ),
+      this.gl.enableVertexAttribArray(program.attribute.a_texCoord),
+      this.gl.vertexAttribPointer(
+        program.attribute.a_texCoord,
+        2,
+        this.gl.FLOAT,
+        !1,
+        4 * i,
+        2 * i
+      ),
+      program
+    );
+  }
+
+  // ------------------ Shaders ------------------
+  filter(filter) {
+    const fsFilter = {
+      grayscale: fsGrayscale,
+      sepia: fsSepia,
+      invert: fsInvert,
+    };
+
+    var compProg = this.compiledPrograms.get(filter);
+    if (!compProg) {
+      compProg = this.compileProgram(null, fsFilter[filter]);
+      this.compiledPrograms.set(filter, compProg);
+    }
+
+    this.gl.useProgram(compProg.program);
+
+    this.draw(compProg);
+  }
+
+  getCompiledProgram(edit) {
+    const fsEdit = {
+      exposure: fsExposure,
+      contrast: fsContrast,
+      gamma: fsGamma,
+      saturation: fsSaturation,
+      temperature: fsTemperature,
+      tint: fsTint,
+      sharpness: fsSharpness,
+      blur: fsBlur,
+      vignette: fsVignette,
+    };
+
+    var compProg = this.compiledPrograms.get(edit);
+    if (!compProg) {
+      compProg = this.compileProgram(null, fsEdit[edit]);
+      this.compiledPrograms.set(edit, compProg);
+    }
+
+    this.gl.useProgram(compProg.program);
+    return compProg;
+  }
+
+  exposure(val) {
+    const compProg = this.getCompiledProgram("exposure");
+
+    this.gl.uniform1f(compProg.uniform.u_exposure, val);
+
+    this.draw(compProg);
+  }
+
+  contrast(val) {
+    const compProg = this.getCompiledProgram("contrast");
+
+    this.gl.uniform1f(compProg.uniform.u_contrast, val);
+
+    this.draw(compProg);
+  }
+
+  gamma(val) {
+    const compProg = this.getCompiledProgram("gamma");
+
+    this.gl.uniform1f(compProg.uniform.u_gamma, val);
+
+    this.draw(compProg);
+  }
+
+  saturation(val) {
+    const compProg = this.getCompiledProgram("saturation");
+
+    this.gl.uniform1f(compProg.uniform.u_saturation, val);
+
+    this.draw(compProg);
+  }
+
+  temperature(val) {
+    const compProg = this.getCompiledProgram("temperature");
+
+    this.gl.uniform1f(compProg.uniform.u_temperature, val);
+
+    this.draw(compProg);
+  }
+
+  tint(val) {
+    const compProg = this.getCompiledProgram("tint");
+
+    this.gl.uniform1f(compProg.uniform.u_tint, val);
+
+    this.draw(compProg);
+  }
+
+  sharpness(val) {
+    const compProg = this.getCompiledProgram("sharpness");
+
+    const kernel = new Float32Array([0, -1, 0, -1, 5, -1, 0, -1, 0]);
+    this.gl.uniform1fv(compProg.uniform.kernel, kernel);
+    this.gl.uniform1f(compProg.uniform.u_sharpness, val);
+    this.gl.uniform2f(compProg.uniform.offset, 1 / this.width, 1 / this.height);
+    this.draw(compProg);
+  }
+
+  blur(val) {
+    const compProg = this.getCompiledProgram("blur");
+
+    var x = val / this.canvas.width,
+      y = val / this.canvas.height;
+
+    this.gl.uniform2f(compProg.uniform.u_size, 0, x);
+    this.draw(compProg, !0);
+
+    this.gl.uniform2f(compProg.uniform.u_size, y, 0);
+    this.draw(compProg, !1);
+  }
+
+  vignette(val) {
+    const compProg = this.getCompiledProgram("vignette");
+
+    this.gl.uniform1f(compProg.uniform.u_vignette, val);
+
+    this.draw(compProg);
+  }
+}
+class Shader {
+  constructor(shader, val) {
+    (this.shader = shader), (this.value = val);
+  }
+}
+
+class FramebufferTexture {
+  constructor(framebuffer, renderbuffer, texture) {
+    (this.framebuffer = framebuffer),
+      (this.renderbuffer = renderbuffer),
+      (this.texture = texture);
+  }
+  delete(gl) {
+    gl.deleteFramebuffer(this.framebuffer);
+    gl.deleteRenderbuffer(this.renderbuffer);
+    gl.deleteTexture(this.texture);
+  }
+}
+
+class Texture {
+  constructor(name) {
+    (this.name = name), (this.texture = null);
+  }
+  createTexture(gl) {
+    this.texture = gl.createTexture();
+  }
+  bindTexture(gl, image) {
+    gl.bindTexture(gl.TEXTURE_2D, this.texture);
+
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 4);
+
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+  }
+  delete(gl) {
+    gl.deleteTexture(this.texture);
+  }
+}

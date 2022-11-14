@@ -46,8 +46,8 @@ html {
   background-color: #515151;
 }
 
-#imageActions #downloadButton:disabled,
-#imageActions #resetButton:disabled {
+#imageActions #download:disabled,
+#imageActions #reset:disabled {
   background-color: #ccc;
   cursor: not-allowed;
 }
@@ -158,9 +158,9 @@ canvas {
   color: white;
 }
 
-.active-filter {
+.filter-active {
   background-color: #b3b3b3 !important;
-  color: white;
+  border-radius: inherit;
 }
 
 .input-range {

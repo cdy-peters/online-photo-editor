@@ -1,102 +1,141 @@
 // Vertex Shader
 const vsSource = `
+  precision highp float;
+
   attribute vec2 a_position;
   attribute vec2 a_texCoord;
-  
-  uniform vec2 u_resolution;
-  uniform float u_flipY;
   
   varying vec2 v_texCoord;
   
   void main() {
-    // convert the rectangle from pixels to 0.0 to 1.0
-    vec2 zeroToOne = a_position / u_resolution;
-
-    // convert from 0->1 to 0->2
-    vec2 zeroToTwo = zeroToOne * 2.0;
-
-    // convert from 0->2 to -1->+1 (clipspace)
-    vec2 clipSpace = zeroToTwo - 1.0;
-
-    gl_Position = vec4(clipSpace * vec2(1, u_flipY), 0, 1);
-
-    // pass the texCoord to the fragment shader
-    // The GPU will interpolate this value between points.
     v_texCoord = a_texCoord;
-  }`;
 
-// Fragment Shader
+    gl_Position = vec4(a_position, 0, 1);
+  }
+`;
+
+// Fragment Shaders
 const fsSource = `
-  precision mediump float;
-  
-  // our texture
+  precision highp float;
+
   uniform sampler2D u_image;
-  uniform vec2 u_textureSize;
-  uniform float u_kernel[9];
-  uniform float u_kernelWeight;
-
-  uniform bool u_grayscale;
-  uniform bool u_sepia;
-  uniform bool u_invert;
-  
-  uniform float u_exposure;
-  uniform float u_contrast;
-  uniform float u_gamma;
-
-  uniform float u_saturation;
-  uniform float u_temperature;
-  uniform float u_tint;
-
-  uniform float u_vignette;
-  
-  // the texCoords passed in from the vertex shader.
   varying vec2 v_texCoord;
 
-  vec4 convolution(sampler2D image, vec2 uv, vec2 resolution, float kernel[9]) {
-    vec2 onePixel = vec2(1.0, 1.0) / resolution;
-    vec4 colorSum =
-      texture2D(u_image, v_texCoord + onePixel * vec2(-1, -1)) * u_kernel[0] +
-      texture2D(u_image, v_texCoord + onePixel * vec2( 0, -1)) * u_kernel[1] +
-      texture2D(u_image, v_texCoord + onePixel * vec2( 1, -1)) * u_kernel[2] +
-      texture2D(u_image, v_texCoord + onePixel * vec2(-1,  0)) * u_kernel[3] +
-      texture2D(u_image, v_texCoord + onePixel * vec2( 0,  0)) * u_kernel[4] +
-      texture2D(u_image, v_texCoord + onePixel * vec2( 1,  0)) * u_kernel[5] +
-      texture2D(u_image, v_texCoord + onePixel * vec2(-1,  1)) * u_kernel[6] +
-      texture2D(u_image, v_texCoord + onePixel * vec2( 0,  1)) * u_kernel[7] +
-      texture2D(u_image, v_texCoord + onePixel * vec2( 1,  1)) * u_kernel[8] ;
-  
-    return colorSum / u_kernelWeight;
+  void main() {
+    gl_FragColor = texture2D(u_image, v_texCoord);
   }
+`;
 
-  vec3 grayscaleFilter(vec3 color) {
-    float average = (color.r + color.g + color.b) / 3.0;
-    return vec3(average, average, average);
-  }
+// Filters
+const fsGrayscale = `
+  precision highp float;
 
-  vec3 sepiaFilter(vec3 color) {
-    vec3 sepia = vec3(
-      dot(color, vec3(0.393, 0.769, 0.189)),
-      dot(color, vec3(0.349, 0.686, 0.168)),
-      dot(color, vec3(0.272, 0.534, 0.131))
-    );
-    return sepia;
-  }
+  uniform sampler2D u_image;
 
-  vec3 invertFilter(vec3 color) {
-    return vec3(1.0) - color;
+  varying vec2 v_texCoord;
+
+  void main() {
+    vec4 color = texture2D(u_image, v_texCoord);
+    float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+    gl_FragColor = vec4(vec3(gray), color.a);
   }
-  
+`;
+
+const fsSepia = `
+  precision highp float;
+
+  uniform sampler2D u_image;
+
+  varying vec2 v_texCoord;
+
+  void main() {
+    vec4 color = texture2D(u_image, v_texCoord);
+    float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+    gl_FragColor = vec4(gray * vec3(1.2, 1.0, 0.8), color.a);
+  }
+`;
+
+const fsInvert = `
+  precision highp float;
+
+  uniform sampler2D u_image;
+
+  varying vec2 v_texCoord;
+
+  void main() {
+    vec4 color = texture2D(u_image, v_texCoord);
+    gl_FragColor = vec4(1.0 - color.rgb, color.a);
+  }
+`;
+
+// Light
+const fsExposure = `
+  precision highp float;
+
+  uniform sampler2D u_image;
+  uniform float u_exposure;
+
+  varying vec2 v_texCoord;
+
   vec3 adjustExposure(vec3 color, float exposure) {
     return color * pow(2.0, exposure);
   }
 
+  void main() {
+    vec4 color = texture2D(u_image, v_texCoord);
+    color.rgb = adjustExposure(color.rgb, u_exposure);
+    gl_FragColor = color;
+  }
+`;
+
+const fsContrast = `
+  precision highp float;
+
+  uniform sampler2D u_image;
+  uniform float u_contrast;
+
+  varying vec2 v_texCoord;
+
   vec3 adjustContrast(vec3 color, float contrast) {
+    contrast += 1.0;
     return (color - 0.5) * contrast + 0.5;
   }
 
+  void main() {
+    vec4 color = texture2D(u_image, v_texCoord);
+    color.rgb = adjustContrast(color.rgb, u_contrast);
+    gl_FragColor = color;
+  }
+`;
+
+const fsGamma = `
+  precision highp float;
+
+  uniform sampler2D u_image;
+  uniform float u_gamma;
+
+  varying vec2 v_texCoord;
+
   vec3 adjustGamma(vec3 color, float gamma) {
+    gamma += 1.0;
     return pow(color, vec3(1.0 / gamma));
   }
+
+  void main() {
+    vec4 color = texture2D(u_image, v_texCoord);
+    color.rgb = adjustGamma(color.rgb, u_gamma);
+    gl_FragColor = color;
+  }
+`;
+
+// Color
+const fsSaturation = `
+  precision highp float;
+
+  uniform sampler2D u_image;
+  uniform float u_saturation;
+
+  varying vec2 v_texCoord;
 
   vec3 adjustSaturation(vec3 color, float saturation) {
     vec3 grayXfer = vec3(0.3, 0.59, 0.11);
@@ -104,59 +143,138 @@ const fsSource = `
     return mix(gray, color, saturation);
   }
 
-  vec3 adjustTemperature(vec3 color, float temperature) {
-    vec3 retColor = color;
-    retColor.r = color.r + temperature;
-    retColor.g = color.g;
-    retColor.b = color.b - temperature;
-    return clamp(retColor, 0.0, 1.0);
-  }
-
-  vec3 adjustTint(vec3 color, float tint) {
-    vec3 retColor = color;
-    retColor.r = color.r + tint;
-    retColor.g = color.g - tint;
-    retColor.b = color.b;
-    return clamp(retColor, 0.0, 1.0);
-  }
-
-  vec3 applyVignette(vec3 color, float vignette) {
-    vec2 uv = v_texCoord;
-    vec2 texel = vec2(1.0, 1.0) / u_textureSize;
-    vec2 center = vec2(0.5, 0.5);
-    vec2 dist = uv - center;
-    float percent = 1.0 - (length(dist) * vignette);
-    return color * percent;
-  }
-  
   void main() {
     vec4 color = texture2D(u_image, v_texCoord);
-    color.rgb = convolution(u_image, v_texCoord, u_textureSize, u_kernel).rgb;
-
-    if (u_grayscale) {
-      color.rgb = grayscaleFilter(color.rgb);
-    }
-
-    if (u_sepia) {
-      color.rgb = sepiaFilter(color.rgb);
-    }
-
-    if (u_invert) {
-      color.rgb = invertFilter(color.rgb);
-    }
-
-    // Light
-    color.rgb = adjustExposure(color.rgb, u_exposure);
-    color.rgb = adjustContrast(color.rgb, u_contrast + 1.0);
-    color.rgb = adjustGamma(color.rgb, u_gamma + 1.0);
-
-    // Color
     color.rgb = adjustSaturation(color.rgb, u_saturation + 1.0);
-    color.rgb = adjustTemperature(color.rgb, u_temperature / 2.0);
-    color.rgb = adjustTint(color.rgb, u_tint / 2.0);
-
-    // Effects
-    color.rgb = applyVignette(color.rgb, u_vignette);
-
     gl_FragColor = color;
-  }`;
+  }
+`;
+
+const fsTemperature = `
+  precision highp float;
+
+  uniform sampler2D u_image;
+  uniform float u_temperature;
+
+  varying vec2 v_texCoord;
+
+  vec3 adjustTemperature(vec3 color, float temperature) {
+    temperature /= 2.0;
+    color.r = color.r + temperature;
+    color.b = color.b - temperature;
+    return clamp(color, 0.0, 1.0);
+  }
+
+  void main() {
+    vec4 color = texture2D(u_image, v_texCoord);
+    color.rgb = adjustTemperature(color.rgb, u_temperature);
+    gl_FragColor = color;
+  }
+`;
+
+const fsTint = `
+  precision highp float;
+
+  uniform sampler2D u_image;
+  uniform float u_tint;
+
+  varying vec2 v_texCoord;
+
+  vec3 adjustTint(vec3 color, float tint) {
+    tint /= 2.0;
+    color.r = color.r + tint;
+    color.g = color.g - tint;
+    return clamp(color, 0.0, 1.0);
+  }
+
+  void main() {
+    vec4 color = texture2D(u_image, v_texCoord);
+    color.rgb = adjustTint(color.rgb, u_tint);
+    gl_FragColor = color;
+  }
+`;
+
+// Details
+const fsSharpness = `
+  precision highp float;
+
+  uniform sampler2D u_image;
+  uniform float u_sharpness;
+  uniform vec2 offset;
+  uniform float kernel[9];
+
+  varying vec2 v_texCoord;
+
+  void main() {
+    float sharpness = u_sharpness / 10.0;
+
+    vec4 a11 = texture2D(u_image, v_texCoord - offset);
+    vec4 a12 = texture2D(u_image, vec2(v_texCoord.x, v_texCoord.y - offset.y));
+    vec4 a13 = texture2D(u_image, vec2(v_texCoord.x + offset.x, v_texCoord.y - offset.y));
+    vec4 a21 = texture2D(u_image, vec2(v_texCoord.x - offset.x, v_texCoord.y));
+    vec4 a22 = texture2D(u_image, v_texCoord);
+    vec4 a23 = texture2D(u_image, vec2(v_texCoord.x + offset.x, v_texCoord.y));
+    vec4 a31 = texture2D(u_image, vec2(v_texCoord.x - offset.x, v_texCoord.y + offset.y));
+    vec4 a32 = texture2D(u_image, vec2(v_texCoord.x, v_texCoord.y + offset.y));
+    vec4 a33 = texture2D(u_image, v_texCoord + offset);
+
+    vec4 color = a11 * kernel[0] + a12 * kernel[1] + a13 * kernel[2] +
+                  a21 * kernel[3] + a22 * kernel[4] + a23 * kernel[5] +
+                  a31 * kernel[6] + a32 * kernel[7] + a33 * kernel[8];
+
+    gl_FragColor = color * sharpness + a22 * (1.0 - sharpness);
+  }
+`;
+
+const fsBlur = `
+  precision highp float;
+
+  uniform sampler2D u_image;
+  uniform vec2 u_size;
+  
+  varying vec2 v_texCoord;
+
+  float random(vec3 scale, float seed) {
+    return fract(sin(dot(gl_FragCoord.xyz + seed, scale)) * 43758.5453 + seed);
+  }
+
+  void main() {
+    vec4 color = vec4(0.0);
+    float total = 0.0;
+    float offset = random(vec3(12.9898, 78.233, 151.7182), 0.0);
+
+    for (float t = -30.0; t <= 30.0; t++) {
+      float percent = (t + offset - 0.5) / 30.0;
+      float weight = 1.0 - abs(percent);
+      vec4 sample = texture2D(u_image, v_texCoord + u_size * percent);
+      sample.rgb *= sample.a;
+      color += sample * weight;
+      total += weight;
+    }
+
+    gl_FragColor = color / total;
+    gl_FragColor.rgb /= gl_FragColor.a + 0.00001;
+  }
+`;
+
+// Effects
+const fsVignette = `
+  precision highp float;
+
+  uniform sampler2D u_image;
+  uniform float u_vignette;
+
+  varying vec2 v_texCoord;
+
+  vec3 vignette(vec3 color, float vignette) {
+    float dist = distance(v_texCoord, vec2(0.5));
+    float intensity = smoothstep(0.8, 0.0, dist * vignette);
+    return color * intensity;
+  }
+
+  void main() {
+    vec4 color = texture2D(u_image, v_texCoord);
+    color.rgb = vignette(color.rgb, u_vignette);
+    gl_FragColor = color;
+  }
+`;
