@@ -2,12 +2,12 @@
 
 var render = null;
 
-const renderImage = (image) => {
+const renderImage = (image, filename) => {
   if (render) {
     resetValues();
     render = null;
   }
-  render = new Init();
+  render = new Init(filename);
 
   render.apply(image);
   render.compileProgram(null, fsSource);
@@ -15,11 +15,17 @@ const renderImage = (image) => {
 };
 
 const resetValues = () => {
+  $("#download").attr("disabled", "disabled");
+
   $(".filter").removeClass("filter-active");
 
   $(".input-range > input").val(0);
   $(".input-range > p").text(0);
 };
+
+$("#download").click(() => {
+  render.download(image);
+});
 
 $("#reset").click(() => {
   resetValues();
@@ -128,7 +134,7 @@ class Program {
 }
 
 class Init {
-  constructor() {
+  constructor(filename) {
     this.drawShader = 0;
     this.width = 0;
     this.height = 0;
@@ -140,6 +146,8 @@ class Init {
     this.vertexBuffer = null;
     this.edits = [];
     this.compiledPrograms = new Map();
+    this.capture = false;
+    this.filename = filename;
     this.initContext();
   }
 
@@ -156,6 +164,9 @@ class Init {
   }
 
   addShader(shader, val) {
+    if (this.edits.length == 0) {
+      $("#download").removeAttr("disabled");
+    }
     for (var i = 0; i < this.edits.length; i++) {
       if (this.edits[i].shader == shader) {
         this.edits[i].value = val;
@@ -178,6 +189,9 @@ class Init {
     for (var i = 0; i < this.edits.length; i++) {
       if (this.edits[i].shader == shader) {
         this.edits.splice(i, 1);
+        if (this.edits.length == 0) {
+          $("#download").attr("disabled", "disabled");
+        }
         return;
       }
     }
@@ -206,6 +220,11 @@ class Init {
       case "vignette":
         return this.vignette(val);
     }
+  }
+
+  download(image) {
+    this.capture = true;
+    this.apply(image);
   }
 
   reset() {
@@ -248,6 +267,16 @@ class Init {
     if (this.edits.length == 0 && this.lastInChain) {
       this.compileProgram(null, fsSource);
       this.draw();
+    }
+
+    if (this.capture == true) {
+      this.capture = false;
+
+      const dataURL = this.gl.canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.download = `${this.filename} - Edited.png`;
+      link.href = dataURL;
+      link.click();
     }
 
     return (this.currentFramebufferIndex = 0), this.canvas;

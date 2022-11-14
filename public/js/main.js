@@ -46,11 +46,14 @@ const readFile = (file) => {
   if (file.type.includes("image")) {
     const reader = new FileReader();
 
+    var filename = file.name;
+    filename = filename.substring(0, filename.lastIndexOf("."));
+
     reader.onload = function (e) {
       image.src = e.target.result;
 
       image.onload = function () {
-        renderImage(image);
+        renderImage(image, filename);
       };
     };
 
@@ -58,7 +61,6 @@ const readFile = (file) => {
 
     if ($("#editOptions").attr("hidden")) {
       $("#imageDropzone").css("display", "none");
-      $("#downloadButton").removeAttr("disabled");
       $("#reset").removeAttr("disabled");
       $("#editOptions").removeAttr("hidden");
       $("#canvasContainer").removeAttr("hidden");
