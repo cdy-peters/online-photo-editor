@@ -206,8 +206,8 @@ class Init {
         return this.exposure(val);
       case "contrast":
         return this.contrast(val);
-      case "gamma":
-        return this.gamma(val);
+      case "brightness":
+        return this.brightness(val);
       case "saturation":
         return this.saturation(val);
       case "temperature":
@@ -488,7 +488,7 @@ class Init {
     const fsEdit = {
       exposure: fsExposure,
       contrast: fsContrast,
-      gamma: fsGamma,
+      brightness: fsBrightness,
       saturation: fsSaturation,
       temperature: fsTemperature,
       tint: fsTint,
@@ -523,10 +523,10 @@ class Init {
     this.draw(compProg);
   }
 
-  gamma(val) {
-    const compProg = this.getCompiledProgram("gamma");
+  brightness(val) {
+    const compProg = this.getCompiledProgram("brightness");
 
-    this.gl.uniform1f(compProg.uniform.u_gamma, val);
+    this.gl.uniform1f(compProg.uniform.u_brightness, val);
 
     this.draw(compProg);
   }

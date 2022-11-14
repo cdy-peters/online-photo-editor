@@ -108,22 +108,22 @@ const fsContrast = `
   }
 `;
 
-const fsGamma = `
+const fsBrightness = `
   precision highp float;
 
   uniform sampler2D u_image;
-  uniform float u_gamma;
+  uniform float u_brightness;
 
   varying vec2 v_texCoord;
 
-  vec3 adjustGamma(vec3 color, float gamma) {
-    gamma += 1.0;
-    return pow(color, vec3(1.0 / gamma));
+  vec3 adjustBrightness(vec3 color, float brightness) {
+    brightness /= 2.0;
+    return color + brightness;
   }
 
   void main() {
     vec4 color = texture2D(u_image, v_texCoord);
-    color.rgb = adjustGamma(color.rgb, u_gamma);
+    color.rgb = adjustBrightness(color.rgb, u_brightness);
     gl_FragColor = color;
   }
 `;
