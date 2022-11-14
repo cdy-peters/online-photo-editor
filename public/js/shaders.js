@@ -77,14 +77,25 @@ const fsBrightness = `
 
   varying vec2 v_texCoord;
 
-  vec3 adjustBrightness(vec3 color, float brightness) {
+  vec3 upBrightness(vec3 color, float brightness) {
     brightness /= 2.0;
-    return color + brightness;
+    return color + brightness * sin(color * 3.1415926535897932384626433832795);
+  }
+
+  vec3 downBrightness(vec3 color, float brightness) {
+    brightness /= 1.5;
+    return (1.0 + brightness) * color;
   }
 
   void main() {
     vec4 color = texture2D(u_image, v_texCoord);
-    color.rgb = adjustBrightness(color.rgb, u_brightness);
+
+    if (u_brightness > 0.0) {
+      color.rgb = upBrightness(color.rgb, u_brightness);
+    } else {
+      color.rgb = downBrightness(color.rgb, u_brightness);
+    };
+
     gl_FragColor = color;
   }
 `;
@@ -182,9 +193,8 @@ const fsTint = `
   varying vec2 v_texCoord;
 
   vec3 adjustTint(vec3 color, float tint) {
-    tint /= -6.0;
-    color.r = color.r + tint;
-    color.g = color.g - tint;
+    tint /= 6.0;
+    color.g = color.g + tint;
     return clamp(color, 0.0, 1.0);
   }
 
