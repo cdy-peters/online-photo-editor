@@ -80,7 +80,10 @@ $(".input-range").on("input", (e) => {
     $(`#${id}-value`).val(parseInt(val * 100));
   }
 
-  val == 0 ? render.removeShader(id) : render.addShader(id, val);
+  id = id.split("-")[0];
+  val == 0 || val == "0-" || val == "-0" || isNaN(val)
+    ? render.removeShader(id)
+    : render.addShader(id, val);
 
   render.apply(image);
 });
@@ -172,7 +175,7 @@ class Init {
     this.vertexBuffer = null;
     this.edits = [];
     this.compiledPrograms = new Map();
-    this.capture = false;
+    this.capture = !1;
     this.filename = filename;
     this.initContext();
   }
@@ -212,6 +215,7 @@ class Init {
   }
 
   removeShader(shader) {
+    console.log("length", shader);
     for (var i = 0; i < this.edits.length; i++) {
       if (this.edits[i].shader == shader) {
         this.edits.splice(i, 1);
@@ -249,7 +253,7 @@ class Init {
   }
 
   download(image) {
-    this.capture = true;
+    this.capture = !0;
     this.apply(image);
   }
 
@@ -295,8 +299,8 @@ class Init {
       this.draw();
     }
 
-    if (this.capture == true) {
-      this.capture = false;
+    if (this.capture == !0) {
+      this.capture = !1;
 
       const dataURL = this.gl.canvas.toDataURL("image/png");
       const link = document.createElement("a");
