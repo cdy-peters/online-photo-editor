@@ -50,10 +50,35 @@ $(".filter").on("click", (e) => {
 });
 
 $(".input-range").on("input", (e) => {
-  var id = e.target.id;
-  var val = e.target.value;
+  var id = e.target.id,
+    val = e.target.value,
+    min = e.target.min;
 
-  $(`#${id}-value`).text(parseInt(val * 100));
+  if ((val == "0-" || val == "-0") && min < 0) {
+    $(`#${id}`).val("-0");
+  } else if (val != "-") {
+    val = parseFloat(e.target.value);
+
+    if (isNaN(val)) $(`#${id}`).val(0);
+  }
+
+  if (Number.isInteger(val) && id.includes("value")) {
+    var max = e.target.max;
+
+    if (val > max) {
+      val = max;
+    } else if (val < min) {
+      val = min;
+    }
+    $(`#${id}`).val(val);
+
+    id = id.split("-")[0];
+    val /= 100;
+
+    $(`#${id}`).val(val);
+  } else {
+    $(`#${id}-value`).val(parseInt(val * 100));
+  }
 
   val == 0 ? render.removeShader(id) : render.addShader(id, val);
 
