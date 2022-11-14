@@ -18,9 +18,12 @@ const render = (image) => {
   $(".filter").on("click", (e) => {
     const filter = e.target.id;
 
-    var val = render.getShader(filter);
+    var val = render.getShader("filter");
 
-    !val ? render.addShader(filter, 1) : render.removeShader(filter);
+    val == filter
+      ? render.removeShader("filter")
+      : render.addShader("filter", filter);
+    if (val !== filter) $(`#${val}`).removeClass("filter-active");
     $(`#${filter}`).toggleClass("filter-active");
 
     render.apply(image);
@@ -271,10 +274,8 @@ class Init {
 
   runShader(shader, val) {
     switch (shader) {
-      case "grayscale":
-      case "sepia":
-      case "invert":
-        return this.filter(shader);
+      case "filter":
+        return this.filter(val);
       case "exposure":
         return this.exposure(val);
       case "contrast":
