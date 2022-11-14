@@ -215,7 +215,6 @@ class Init {
   }
 
   removeShader(shader) {
-    console.log("length", shader);
     for (var i = 0; i < this.edits.length; i++) {
       if (this.edits[i].shader == shader) {
         this.edits.splice(i, 1);

@@ -269,15 +269,28 @@ const fsVignette = `
 
   varying vec2 v_texCoord;
 
-  vec3 vignette(vec3 color, float vignette) {
+  vec3 blackVignette(vec3 color, float vignette) {
+
+    float dist = distance(v_texCoord, vec2(0.5));
+    float intensity = smoothstep(0.8, 0.0, dist * vignette * 1.5);
+    return color * intensity;
+  }
+
+  vec3 whiteVignette(vec3 color, float vignette) {
     float dist = distance(v_texCoord, vec2(0.5));
     float intensity = smoothstep(0.8, 0.0, dist * vignette);
-    return color * intensity;
+    return color + 1.0 * (1.0 - intensity);
   }
 
   void main() {
     vec4 color = texture2D(u_image, v_texCoord);
-    color.rgb = vignette(color.rgb, u_vignette);
+
+    if (u_vignette > 0.0) {
+      color.rgb = blackVignette(color.rgb, u_vignette);
+    } else {
+      color.rgb = whiteVignette(color.rgb, -u_vignette);
+    }
+
     gl_FragColor = color;
   }
 `;
