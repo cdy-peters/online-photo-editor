@@ -13,8 +13,33 @@ const render = (image) => {
     render.reset();
 
     render.apply(image);
-    render.compileProgram(null, fsSource);
-    render.draw();
+  });
+
+  $("#grayscale").click(() => {
+    var val = render.getShader("grayscale");
+
+    !val ? render.addShader("grayscale", 1) : render.removeShader("grayscale");
+    $("#grayscale").toggleClass("filter-active");
+
+    render.apply(image);
+  });
+
+  $("#sepia").click(() => {
+    var val = render.getShader("sepia");
+
+    !val ? render.addShader("sepia", 1) : render.removeShader("sepia");
+    $("#sepia").toggleClass("filter-active");
+
+    render.apply(image);
+  });
+
+  $("#invert").click(() => {
+    var val = render.getShader("invert");
+
+    !val ? render.addShader("invert", 1) : render.removeShader("invert");
+    $("#invert").toggleClass("filter-active");
+
+    render.apply(image);
   });
 
   $("#exposure").on("input", (e) => {
@@ -100,6 +125,10 @@ const render = (image) => {
 };
 
 const resetValues = () => {
+  $("#grayscale").removeClass("filter-active");
+  $("#sepia").removeClass("filter-active");
+  $("#invert").removeClass("filter-active");
+
   $("#exposure").val(0);
   $("#exposure-value").text(0);
 
@@ -240,8 +269,32 @@ class Init {
     this.edits.push(new Shader(shader, val));
   }
 
+  getShader(shader) {
+    for (var i = 0; i < this.edits.length; i++) {
+      if (this.edits[i].shader == shader) {
+        return this.edits[i].value;
+      }
+    }
+    return null;
+  }
+
+  removeShader(shader) {
+    for (var i = 0; i < this.edits.length; i++) {
+      if (this.edits[i].shader == shader) {
+        this.edits.splice(i, 1);
+        return;
+      }
+    }
+  }
+
   runShader(shader, val) {
     switch (shader) {
+      case "grayscale":
+        return this.grayscale();
+      case "sepia":
+        return this.sepia();
+      case "invert":
+        return this.invert();
       case "exposure":
         return this.exposure(val);
       case "contrast":
@@ -265,19 +318,18 @@ class Init {
 
   reset() {
     (this.edits = []),
-      this.compiledPrograms.forEach(function (e) {
-        e.delete(this.gl);
+      this.compiledPrograms.forEach(function (i) {
+        i.delete(this.gl);
       }, this),
       this.compiledPrograms.clear(),
       this.sourceTexture &&
         ((this.activeSourceTexture = void 0),
         this.sourceTexture.delete(this.gl),
         (this.sourceTexture = null));
-    for (let e in this.tempFramebuffers) {
-      this.tempFramebuffers[e].delete(this.gl);
+    for (var i in this.tempFramebuffers) {
+      this.tempFramebuffers[i].delete(this.gl);
     }
     this.tempFramebuffers = {};
-    // this.drawShader = 0;
   }
 
   apply(image, t = !1) {
@@ -299,6 +351,11 @@ class Init {
     for (var i = 0; i < this.edits.length; i++) {
       this.lastInChain = i == this.edits.length - 1;
       this.runShader(this.edits[i].shader, this.edits[i].value);
+    }
+
+    if (this.edits.length == 0 && this.lastInChain) {
+      this.compileProgram(null, fsSource);
+      this.draw();
     }
 
     return (this.currentFramebufferIndex = 0), this.canvas;
@@ -331,7 +388,6 @@ class Init {
     }
   }
 
-  //
   getTempFramebuffer(idx) {
     return (
       (this.tempFramebuffers[idx] =
@@ -470,7 +526,7 @@ class Init {
         program.attribute.a_position,
         2,
         this.gl.FLOAT,
-        false,
+        !1,
         4 * i,
         0
       ),
@@ -479,7 +535,7 @@ class Init {
         program.attribute.a_texCoord,
         2,
         this.gl.FLOAT,
-        false,
+        !1,
         4 * i,
         2 * i
       ),
@@ -488,6 +544,42 @@ class Init {
   }
 
   // ------------------ Shaders ------------------
+  grayscale() {
+    var compProg = this.compiledPrograms.get("grayscale");
+    if (!compProg) {
+      compProg = this.compileProgram(null, fsGrayscale);
+      this.compiledPrograms.set("grayscale", compProg);
+    }
+
+    this.gl.useProgram(compProg.program);
+
+    this.draw(compProg);
+  }
+
+  sepia() {
+    var compProg = this.compiledPrograms.get("sepia");
+    if (!compProg) {
+      compProg = this.compileProgram(null, fsSepia);
+      this.compiledPrograms.set("sepia", compProg);
+    }
+
+    this.gl.useProgram(compProg.program);
+
+    this.draw(compProg);
+  }
+
+  invert() {
+    var compProg = this.compiledPrograms.get("invert");
+    if (!compProg) {
+      compProg = this.compileProgram(null, fsInvert);
+      this.compiledPrograms.set("invert", compProg);
+    }
+
+    this.gl.useProgram(compProg.program);
+
+    this.draw(compProg);
+  }
+
   exposure(val) {
     var compProg = this.compiledPrograms.get("exposure");
     if (!compProg) {

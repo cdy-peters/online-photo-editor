@@ -26,6 +26,48 @@ const fsSource = `
   }
 `;
 
+// Filters
+const fsGrayscale = `
+  precision highp float;
+
+  uniform sampler2D u_image;
+
+  varying vec2 v_texCoord;
+
+  void main() {
+    vec4 color = texture2D(u_image, v_texCoord);
+    float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+    gl_FragColor = vec4(vec3(gray), color.a);
+  }
+`;
+
+const fsSepia = `
+  precision highp float;
+
+  uniform sampler2D u_image;
+
+  varying vec2 v_texCoord;
+
+  void main() {
+    vec4 color = texture2D(u_image, v_texCoord);
+    float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+    gl_FragColor = vec4(gray * vec3(1.2, 1.0, 0.8), color.a);
+  }
+`;
+
+const fsInvert = `
+  precision highp float;
+
+  uniform sampler2D u_image;
+
+  varying vec2 v_texCoord;
+
+  void main() {
+    vec4 color = texture2D(u_image, v_texCoord);
+    gl_FragColor = vec4(1.0 - color.rgb, color.a);
+  }
+`;
+
 // Light
 const fsExposure = `
   precision highp float;
@@ -213,7 +255,7 @@ const fsBlur = `
     gl_FragColor = color / total;
     gl_FragColor.rgb /= gl_FragColor.a + 0.00001;
   }
-`
+`;
 
 // Effects
 const fsVignette = `

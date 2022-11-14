@@ -106,7 +106,7 @@ canvas {
   display: inline-block;
   font-size: 16px;
   cursor: pointer;
-  width: calc(100% / 4);
+  width: calc(100% / 5);
 }
 
 #tab button:hover {
@@ -156,6 +156,11 @@ canvas {
 .tabcontent button:hover {
   background-color: #b3b3b3;
   color: white;
+}
+
+.filter-active {
+  background-color: #b3b3b3 !important;
+  border-radius: inherit;
 }
 
 .input-range {

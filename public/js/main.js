@@ -77,7 +77,7 @@ const initValues = () => {
 };
 
 // Tabs
-var prevTab = "light";
+var prevTab = "filters";
 $(".tablinks").on("click", (e) => {
   var tab = e.target.id.split("-")[0];
 

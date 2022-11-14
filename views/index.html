@@ -1,171 +1,267 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description"
-        content="Online photo editor that provides filters, light and color adjustments, detail adjustments and effects.">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Online photo editor that provides filters, light and color adjustments, detail adjustments and effects."
+    />
 
     <noscript>
-        <meta http-equiv="refresh" content="0; url=/noscript">
+      <meta http-equiv="refresh" content="0; url=/noscript" />
     </noscript>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="css/style.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.min.css"
+    />
+    <link rel="stylesheet" href="css/style.min.css" />
 
-    <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png" />
 
-    <script src="https://code.jquery.com/jquery-3.6.1.min.js"
-        integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+    <script
+      src="https://code.jquery.com/jquery-3.6.1.min.js"
+      integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ="
+      crossorigin="anonymous"
+    ></script>
 
     <title>Online Photo Editor</title>
-</head>
+  </head>
 
-<div class="flex-wrapper">
-
+  <div class="flex-wrapper">
     <body>
-        <h1 id="title">Online Photo Editor</h1>
+      <h1 id="title">Online Photo Editor</h1>
 
-        <div id="imageActions">
-            <button id="downloadButton" disabled>Download</button>
-            <button id="reset" disabled>Reset</button>
-            <input type="file" id="selectFile" accept="image/*" style="display: none;" />
-            <button id="uploadButton" onclick="$('#selectFile').click()">Upload</button>
+      <div id="imageActions">
+        <button id="downloadButton" disabled>Download</button>
+        <button id="reset" disabled>Reset</button>
+        <input
+          type="file"
+          id="selectFile"
+          accept="image/*"
+          style="display: none"
+        />
+        <button id="uploadButton" onclick="$('#selectFile').click()">
+          Upload
+        </button>
+      </div>
+
+      <div id="imageDropzone">
+        <div id="imageDropzoneInner">
+          <p>
+            Drag and drop an image or select an image via the new image button
+          </p>
+        </div>
+      </div>
+
+      <div id="canvasContainer" hidden>
+        <canvas id="canvas"></canvas>
+      </div>
+      <br />
+
+      <div id="editOptions" hidden>
+        <!-- Tabs -->
+        <div id="tab">
+          <button id="filters-tab" class="tablinks btn-active">Filters</button>
+          <button id="light-tab" class="tablinks">Light</button>
+          <button id="color-tab" class="tablinks">Color</button>
+          <button id="detail-tab" class="tablinks">Detail</button>
+          <button id="effects-tab" class="tablinks">Effects</button>
         </div>
 
-        <div id="imageDropzone">
-            <div id="imageDropzoneInner">
-                <p>Drag and drop an image or select an image via the new image button</p>
-            </div>
+        <div class="tabcontent" id="filters">
+          <button id="grayscale">Grayscale</button>
+          <button id="sepia">Sepia</button>
+          <button id="invert">Invert</button>
         </div>
 
-        <div id="canvasContainer" hidden>
-            <canvas id="canvas"></canvas>
-        </div>
-        <br>
-
-        <div id="editOptions" hidden>
-            <!-- Tabs -->
-            <div id="tab">
-                <button id="light-tab" class="tablinks btn-active">Light</button>
-                <button id="color-tab" class="tablinks">Color</button>
-                <button id="detail-tab" class="tablinks">Detail</button>
-                <button id="effects-tab" class="tablinks">Effects</button>
+        <div class="tabcontent" id="light" hidden>
+          <div class="input-range">
+            <label for="exposure">Exposure</label><br />
+            <div>
+              <p id="exposure-value">0</p>
+              <input
+                type="range"
+                id="exposure"
+                min="-1"
+                max="1"
+                step="0.01"
+                value="0"
+              />
             </div>
+          </div>
 
-            <div class="tabcontent" id="light">
-                <div class="input-range">
-                    <label for="exposure">Exposure</label><br>
-                    <div>
-                        <p id="exposure-value">0</p>
-                        <input type="range" id="exposure" min="-1" max="1" step="0.01" value="0">
-                    </div>
-                </div>
-
-                <div class="input-range">
-                    <label for="contrast">Contrast</label><br>
-                    <div>
-                        <p id="contrast-value">0</p>
-                        <input type="range" id="contrast" min="-1" max="1" step="0.01" value="0">
-                    </div>
-                </div>
-
-                <div class="input-range">
-                    <label for="gamma">Gamma</label><br>
-                    <div>
-                        <p id="gamma-value">0</p>
-                        <input type="range" id="gamma" min="-1" max="1" step="0.01" value="0">
-                    </div>
-                </div>
+          <div class="input-range">
+            <label for="contrast">Contrast</label><br />
+            <div>
+              <p id="contrast-value">0</p>
+              <input
+                type="range"
+                id="contrast"
+                min="-1"
+                max="1"
+                step="0.01"
+                value="0"
+              />
             </div>
+          </div>
 
-            <div class="tabcontent" id="color" hidden>
-                <div class="input-range">
-                    <label for="saturation">Saturation</label><br>
-                    <div>
-                        <p id="saturation-value">0</p>
-                        <input type="range" id="saturation" min="-1" max="1" step="0.01" value="0">
-                    </div>
-                </div>
-
-                <div class="input-range">
-                    <label for="temperature">Temperature</label><br>
-                    <div>
-                        <p id="temperature-value">0</p>
-                        <input type="range" id="temperature" min="-1" max="1" step="0.01" value="0">
-                    </div>
-                </div>
-
-                <div class="input-range">
-                    <label for="tint">Tint</label><br>
-                    <div>
-                        <p id="tint-value">0</p>
-                        <input type="range" id="tint" min="-1" max="1" step="0.01" value="0">
-                    </div>
-                </div>
+          <div class="input-range">
+            <label for="gamma">Gamma</label><br />
+            <div>
+              <p id="gamma-value">0</p>
+              <input
+                type="range"
+                id="gamma"
+                min="-1"
+                max="1"
+                step="0.01"
+                value="0"
+              />
             </div>
-
-            <div class="tabcontent" id="detail" hidden>
-                <div class="input-range">
-                    <label for="sharpness">Sharpness</label><br>
-                    <div>
-                        <p id="sharpness-value">0</p>
-                        <input type="range" id="sharpness" min="0" max="10" step="0.1" value="0">
-                    </div>
-                </div>
-
-                <div class="input-range">
-                    <label for="blur">Blur</label><br>
-                    <div>
-                        <p id="blur-value">0</p>
-                        <input type="range" id="blur" min="0" max="10" step="0.1" value="0">
-                    </div>
-                </div>
-            </div>
-
-            <div class="tabcontent" id="effects" hidden>
-                <div class="input-range">
-                    <label for="vignette">Vignette</label><br>
-                    <div>
-                        <p id="vignette-value">0</p>
-                        <input type="range" id="vignette" min="0" max="2" step="0.01" value="0">
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
 
-        <script src="js/main.js"></script>
-        <script src="js/shaders.js"></script>
-        <script src="js/webgl.js"></script>
+        <div class="tabcontent" id="color" hidden>
+          <div class="input-range">
+            <label for="saturation">Saturation</label><br />
+            <div>
+              <p id="saturation-value">0</p>
+              <input
+                type="range"
+                id="saturation"
+                min="-1"
+                max="1"
+                step="0.01"
+                value="0"
+              />
+            </div>
+          </div>
+
+          <div class="input-range">
+            <label for="temperature">Temperature</label><br />
+            <div>
+              <p id="temperature-value">0</p>
+              <input
+                type="range"
+                id="temperature"
+                min="-1"
+                max="1"
+                step="0.01"
+                value="0"
+              />
+            </div>
+          </div>
+
+          <div class="input-range">
+            <label for="tint">Tint</label><br />
+            <div>
+              <p id="tint-value">0</p>
+              <input
+                type="range"
+                id="tint"
+                min="-1"
+                max="1"
+                step="0.01"
+                value="0"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="tabcontent" id="detail" hidden>
+          <div class="input-range">
+            <label for="sharpness">Sharpness</label><br />
+            <div>
+              <p id="sharpness-value">0</p>
+              <input
+                type="range"
+                id="sharpness"
+                min="0"
+                max="10"
+                step="0.1"
+                value="0"
+              />
+            </div>
+          </div>
+
+          <div class="input-range">
+            <label for="blur">Blur</label><br />
+            <div>
+              <p id="blur-value">0</p>
+              <input
+                type="range"
+                id="blur"
+                min="0"
+                max="10"
+                step="0.1"
+                value="0"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="tabcontent" id="effects" hidden>
+          <div class="input-range">
+            <label for="vignette">Vignette</label><br />
+            <div>
+              <p id="vignette-value">0</p>
+              <input
+                type="range"
+                id="vignette"
+                min="0"
+                max="2"
+                step="0.01"
+                value="0"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script src="js/main.js"></script>
+      <script src="js/shaders.js"></script>
+      <script src="js/webgl.js"></script>
     </body>
 
     <footer>
-        <div id="footer-inner">
-            <div id="footer-title">
-                <p>Online Photo Editor</p>
-            </div>
-            <div id="copyright">
-                <p>&copy; 2022 - Cody Peters</p>
-            </div>
-            <div id="social-container">
-                <a class="social-background" aria-label="Github"
-                    href="https://github.com/cdy-peters/online-photo-editor" target="_blank">
-                    <i class="bi bi-github"></i>
-                </a>
-                <a class="social-background" aria-label="Linkedin" href="https://linkedin.com/in/cdy-peters"
-                    target="_blank">
-                    <i class="bi bi-linkedin"></i>
-                </a>
-                <a class="social-background" aria-label="Project portfolio" href="https://codypeters.dev"
-                    target="_blank">
-                    <i class="bi bi-person-fill"></i>
-                </a>
-                <br style="clear: both;">
-            </div>
+      <div id="footer-inner">
+        <div id="footer-title">
+          <p>Online Photo Editor</p>
         </div>
+        <div id="copyright">
+          <p>&copy; 2022 - Cody Peters</p>
+        </div>
+        <div id="social-container">
+          <a
+            class="social-background"
+            aria-label="Github"
+            href="https://github.com/cdy-peters/online-photo-editor"
+            target="_blank"
+          >
+            <i class="bi bi-github"></i>
+          </a>
+          <a
+            class="social-background"
+            aria-label="Linkedin"
+            href="https://linkedin.com/in/cdy-peters"
+            target="_blank"
+          >
+            <i class="bi bi-linkedin"></i>
+          </a>
+          <a
+            class="social-background"
+            aria-label="Project portfolio"
+            href="https://codypeters.dev"
+            target="_blank"
+          >
+            <i class="bi bi-person-fill"></i>
+          </a>
+          <br style="clear: both" />
+        </div>
+      </div>
     </footer>
-</div>
-
+  </div>
 </html>
