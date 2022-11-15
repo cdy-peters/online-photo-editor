@@ -1,4 +1,4 @@
-var image = new Image();
+var image;
 
 class InitEdits {
   constructor() {
@@ -64,23 +64,30 @@ const readFile = (file) => {
           canvas.width = image.width * factor;
           canvas.height = image.height * factor;
 
-          if (
-            !confirm(
-              `Image is too large. Do you want to resize it to ${Math.round(
-                canvas.width
-              )}x${Math.round(canvas.height)}?`
-            )
-          ) {
-            return;
-          }
+          $(".dialog-inner > p").html(
+            `<h4>Image is too large.</h4> Do you want to resize it to ${Math.round(
+              canvas.width
+            )}x${Math.round(canvas.height)}?`
+          );
+          $(".dialog").css("display", "block");
+
+          $(".dialog-cancel").click(() => {
+            $(".dialog").css("display", "none");
+
+            $("#selectFile").wrap("<form>").closest("form").get(0).reset();
+            $("#selectFile").unwrap();
+          });
+
+          $(".dialog-confirm").click(() => {
+            $(".dialog").css("display", "none");
+            resizeImage.src = image.src;
+          });
 
           resizeImage.onload = function () {
             ctx.drawImage(resizeImage, 0, 0, canvas.width, canvas.height);
 
             image.src = canvas.toDataURL();
           };
-
-          resizeImage.src = image.src;
         } else {
           renderImage(image, filename);
         }

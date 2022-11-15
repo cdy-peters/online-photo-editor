@@ -15,6 +15,55 @@ html {
   justify-content: flex-start;
 }
 
+.dialog {
+  display: none;
+  z-index: 1;
+}
+
+.dialog-outer {
+  display: table;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.dialog-middle {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.dialog-inner {
+  margin-left: auto;
+  margin-right: auto;
+  width: fit-content;
+  padding: 15px;
+  background-color: #373737;
+  color: white;
+  text-align: center;
+  border-radius: 3px;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5);
+}
+
+.dialog-inner p {
+  margin-bottom: 10px;
+}
+
+.dialog-inner button {
+  background-color: #515151;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.dialog-inner button:hover {
+  background-color: #b3b3b3;
+}
+
 #title {
   font-size: 1.5em;
   font-weight: bold;
