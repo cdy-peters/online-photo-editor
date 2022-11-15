@@ -35,6 +35,25 @@ $("#reset").click(() => {
   render.apply(image);
 });
 
+$(".flip").on("click", (e) => {
+  var id = e.target.id;
+  var val = render.getShader("flip");
+
+  if (id === "flipX") {
+    !val ? (val = [-1, 1]) : (val[0] = -val[0]);
+  } else {
+    !val ? (val = [1, -1]) : (val[1] = -val[1]);
+  }
+
+  if (val[0] === 1 && val[1] === 1) {
+    render.removeShader("flip");
+  } else {
+    render.addShader("flip", val);
+  }
+
+  render.apply(image);
+});
+
 $(".filter").on("click", (e) => {
   const filter = e.target.id;
 
@@ -228,6 +247,8 @@ class Init {
 
   runShader(shader, val) {
     switch (shader) {
+      case "flip":
+        return this.flip(val);
       case "filter":
         return this.filter(val);
       case "brightness":
@@ -467,7 +488,10 @@ class Init {
   }
 
   compileProgram(vs, fs) {
-    var program = new Program(this.gl, (vs = vsSource), fs);
+    if (!vs) {
+      vs = vsSource;
+    }
+    var program = new Program(this.gl, vs, fs);
     var i = Float32Array.BYTES_PER_ELEMENT;
 
     return (
@@ -494,6 +518,21 @@ class Init {
   }
 
   // ------------------ Shaders ------------------
+  flip(val) {
+    var compProg = this.compiledPrograms.get("flip");
+    if (!compProg) {
+      compProg = this.compileProgram(vsFlip, fsSource);
+      this.compiledPrograms.set("flip", compProg);
+    }
+
+    this.gl.useProgram(compProg.program);
+
+    this.gl.uniform1f(compProg.uniform.u_flipX, val[0]);
+    this.gl.uniform1f(compProg.uniform.u_flipY, val[1]);
+
+    this.draw(compProg);
+  }
+
   filter(filter) {
     const fsFilter = {
       grayscale: fsGrayscale,

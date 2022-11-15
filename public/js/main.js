@@ -71,7 +71,7 @@ const readFile = (file) => {
 };
 
 // Tabs
-var prevTab = "filters";
+var prevTab = "adjust";
 $(".tablinks").on("click", (e) => {
   var tab = e.target.id.split("-")[0];
 
