@@ -32,6 +32,29 @@ const vsFlip = `
   }
 `;
 
+const vsRotate = `
+precision highp float;
+
+attribute vec2 a_position;
+attribute vec2 a_texCoord;
+
+uniform vec2 u_rotate;
+
+varying vec2 v_texCoord;
+
+void main() {
+  v_texCoord = a_texCoord;
+
+  vec2 scaledPosition = a_position;
+  vec2 rotatedPosition = vec2(
+    scaledPosition.x * u_rotate.y + scaledPosition.y * u_rotate.x,
+    scaledPosition.y * u_rotate.y - scaledPosition.x * u_rotate.x
+  );
+
+  gl_Position = vec4(rotatedPosition, 0, 1);
+}
+`;
+
 // Fragment Shaders
 const fsSource = `
   precision highp float;

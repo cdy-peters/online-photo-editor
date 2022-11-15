@@ -30,6 +30,16 @@ $("#download").click(() => {
 $("#reset").click(() => {
   resetValues();
 
+  // Reset image dimensions if rotated
+  var rotated = render.getShader("rotate");
+  if (rotated) {
+    if (rotated[1] === 0) {
+      var temp = image.width;
+      image.width = image.height;
+      image.height = temp;
+    }
+  }
+
   render.reset();
 
   render.apply(image);
@@ -50,6 +60,49 @@ $(".flip").on("click", (e) => {
   } else {
     render.addShader("flip", val);
   }
+
+  render.apply(image);
+});
+
+$(".rotate").on("click", (e) => {
+  const getIdx = (arr, val) => {
+    for (var i = 0; i < arr.length; i++) {
+      if (arr[i][0] == val[0] && arr[i][1] == val[1]) {
+        return i;
+      }
+    }
+  };
+
+  var id = e.target.id;
+  var val = render.getShader("rotate");
+
+  // Set rotation vals
+  var arr = [
+    [0, 1],
+    [1, 0],
+    [0, -1],
+    [-1, 0],
+  ];
+  if (!val) {
+    val = [1, 0];
+  } else {
+    var idx = getIdx(arr, val);
+
+    if (id === "clockwise") {
+      if (idx === 3) idx = -1;
+      val = arr[idx + 1];
+    } else {
+      if (idx === 0) idx = 4;
+      val = arr[idx - 1];
+    }
+  }
+
+  render.addShader("rotate", val);
+
+  // Change dimensions of image
+  var temp = image.width;
+  image.width = image.height;
+  image.height = temp;
 
   render.apply(image);
 });
@@ -249,6 +302,8 @@ class Init {
     switch (shader) {
       case "flip":
         return this.flip(val);
+      case "rotate":
+        return this.rotate(val);
       case "filter":
         return this.filter(val);
       case "brightness":
@@ -529,6 +584,20 @@ class Init {
 
     this.gl.uniform1f(compProg.uniform.u_flipX, val[0]);
     this.gl.uniform1f(compProg.uniform.u_flipY, val[1]);
+
+    this.draw(compProg);
+  }
+
+  rotate(val) {
+    var compProg = this.compiledPrograms.get("rotate");
+    if (!compProg) {
+      compProg = this.compileProgram(vsRotate, fsSource);
+      this.compiledPrograms.set("rotate", compProg);
+    }
+
+    this.gl.useProgram(compProg.program);
+
+    this.gl.uniform2fv(compProg.uniform.u_rotate, val);
 
     this.draw(compProg);
   }
