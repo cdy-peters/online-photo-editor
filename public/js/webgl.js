@@ -55,11 +55,9 @@ $(".flip").on("click", (e) => {
     !val ? (val = [1, -1]) : (val[1] = -val[1]);
   }
 
-  if (val[0] === 1 && val[1] === 1) {
-    render.removeShader("flip");
-  } else {
-    render.addShader("flip", val);
-  }
+  val[0] === 1 && val[1] === 1
+    ? render.removeShader("flip")
+    : render.addShader("flip", val);
 
   render.apply(image);
 });
@@ -97,7 +95,9 @@ $(".rotate").on("click", (e) => {
     }
   }
 
-  render.addShader("rotate", val);
+  val[0] === 0 && val[1] === 1
+    ? render.removeShader("rotate")
+    : render.addShader("rotate", val);
 
   // Change dimensions of image
   var temp = image.width;
