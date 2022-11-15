@@ -1,4 +1,4 @@
-var image;
+var imageFile;
 
 class InitEdits {
   constructor() {
@@ -44,25 +44,28 @@ $("#imageDropzone").on("dragleave", (e) => {
 
 const readFile = (file) => {
   if (file.type.includes("image")) {
-    image = new Image();
+    imageFile = new Image();
     const reader = new FileReader();
 
     var filename = file.name;
     filename = filename.substring(0, filename.lastIndexOf("."));
 
     reader.onload = function (e) {
-      image.src = e.target.result;
+      imageFile.src = e.target.result;
 
-      image.onload = function () {
-        if (image.width > 1920 || image.height > 1920) {
+      imageFile.onload = function () {
+        if (imageFile.width > 1920 || imageFile.height > 1920) {
           var canvas = document.createElement("canvas"),
             ctx = canvas.getContext("2d"),
             resizeImage = new Image();
 
           var factor =
-            1920 / (image.width > image.height ? image.width : image.height);
-          canvas.width = image.width * factor;
-          canvas.height = image.height * factor;
+            1920 /
+            (imageFile.width > imageFile.height
+              ? imageFile.width
+              : imageFile.height);
+          canvas.width = imageFile.width * factor;
+          canvas.height = imageFile.height * factor;
 
           $(".dialog-inner > p").html(
             `<h4>Image is too large.</h4> Do you want to resize it to ${Math.round(
@@ -80,16 +83,16 @@ const readFile = (file) => {
 
           $(".dialog-confirm").click(() => {
             $(".dialog").css("display", "none");
-            resizeImage.src = image.src;
+            resizeImage.src = imageFile.src;
           });
 
           resizeImage.onload = function () {
             ctx.drawImage(resizeImage, 0, 0, canvas.width, canvas.height);
 
-            image.src = canvas.toDataURL();
+            imageFile.src = canvas.toDataURL();
           };
         } else {
-          renderImage(image, filename);
+          renderImage(imageFile, filename);
         }
       };
     };

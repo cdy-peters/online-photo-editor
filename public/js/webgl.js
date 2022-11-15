@@ -1,8 +1,10 @@
 "use strict";
 
 var render = null;
+var image = null;
 
-const renderImage = (image, filename) => {
+const renderImage = (imageFile, filename) => {
+  image = imageFile;
   if (render) {
     resetValues();
     render = null;
