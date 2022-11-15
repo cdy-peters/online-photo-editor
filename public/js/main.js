@@ -54,18 +54,40 @@ const readFile = (file) => {
       image.src = e.target.result;
 
       image.onload = function () {
-        renderImage(image, filename);
+        if (image.width > 1920 || image.height > 1920) {
+          var canvas = document.createElement("canvas"),
+            ctx = canvas.getContext("2d"),
+            resizeImage = new Image();
+
+          var factor =
+            1920 / (image.width > image.height ? image.width : image.height);
+          canvas.width = image.width * factor;
+          canvas.height = image.height * factor;
+
+          if (
+            !confirm(
+              `Image is too large. Do you want to resize it to ${Math.round(
+                canvas.width
+              )}x${Math.round(canvas.height)}?`
+            )
+          ) {
+            return;
+          }
+
+          resizeImage.onload = function () {
+            ctx.drawImage(resizeImage, 0, 0, canvas.width, canvas.height);
+
+            image.src = canvas.toDataURL();
+          };
+
+          resizeImage.src = image.src;
+        } else {
+          renderImage(image, filename);
+        }
       };
     };
 
     reader.readAsDataURL(file);
-
-    if ($("#editOptions").attr("hidden")) {
-      $("#imageDropzone").css("display", "none");
-      $("#reset").removeAttr("disabled");
-      $("#editOptions").removeAttr("hidden");
-      $("#canvasContainer").removeAttr("hidden");
-    }
   } else {
     alert("Invalid file type, file must be a PNG or JPEG");
   }

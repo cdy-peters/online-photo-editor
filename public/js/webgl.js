@@ -12,6 +12,13 @@ const renderImage = (image, filename) => {
   render.apply(image);
   render.compileProgram(null, fsSource);
   render.draw();
+
+  if ($("#editOptions").attr("hidden")) {
+    $("#imageDropzone").css("display", "none");
+    $("#reset").removeAttr("disabled");
+    $("#editOptions").removeAttr("hidden");
+    $("#canvasContainer").removeAttr("hidden");
+  }
 };
 
 const resetValues = () => {
