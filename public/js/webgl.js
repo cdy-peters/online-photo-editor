@@ -8,7 +8,7 @@ const renderImage = (image, filename) => {
     render = null;
   }
   render = new Init(filename);
-  
+
   render.apply(image);
   render.compileProgram(null, fsSource);
   render.draw();
@@ -89,7 +89,7 @@ $(".rotate").on("click", (e) => {
     [-1, 0],
   ];
   if (!val) {
-    val = [1, 0];
+    id === "clockwise" ? (val = [1, 0]) : (val = [-1, 0]);
   } else {
     var idx = getIdx(arr, val);
 
