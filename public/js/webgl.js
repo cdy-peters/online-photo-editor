@@ -8,7 +8,7 @@ const renderImage = (image, filename) => {
     render = null;
   }
   render = new Init(filename);
-
+  
   render.apply(image);
   render.compileProgram(null, fsSource);
   render.draw();

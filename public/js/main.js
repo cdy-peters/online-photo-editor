@@ -1,4 +1,4 @@
-const image = new Image();
+var image = new Image();
 
 class InitEdits {
   constructor() {
@@ -44,6 +44,7 @@ $("#imageDropzone").on("dragleave", (e) => {
 
 const readFile = (file) => {
   if (file.type.includes("image")) {
+    image = new Image();
     const reader = new FileReader();
 
     var filename = file.name;
