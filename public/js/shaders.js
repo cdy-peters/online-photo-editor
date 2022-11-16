@@ -311,7 +311,7 @@ const fsShadows = `
     res = mix(base, res, min(a*100.0, 1.0));
     res = setHue(res, base);
     res = res * matROMMtoRGB;
-    
+
     gl_FragColor = vec4(res, col.a);
   }
 `;
@@ -378,6 +378,24 @@ const fsTint = `
     vec4 color = texture2D(u_image, v_texCoord);
     color.rgb = adjustTint(color.rgb, u_tint);
     gl_FragColor = color;
+  }
+`;
+
+const fsHue = `
+  precision highp float;
+
+  uniform sampler2D u_image;
+  uniform float m[9];
+
+  varying vec2 v_texCoord;
+
+  void main(void) {
+    vec4 color = texture2D(u_image, v_texCoord);
+
+    gl_FragColor.r = m[0] * color.r + m[1] * color.g + m[2] * color.b;
+    gl_FragColor.g = m[3] * color.r + m[4] * color.g + m[5] * color.b;
+    gl_FragColor.b = m[6] * color.r + m[7] * color.g + m[8] * color.b;
+    gl_FragColor.a = color.a;
   }
 `;
 
