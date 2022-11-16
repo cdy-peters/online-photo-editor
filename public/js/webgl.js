@@ -321,6 +321,10 @@ class Init {
         return this.exposure(val);
       case "contrast":
         return this.contrast(val);
+      case "highlights":
+        return this.highlights(val);
+      case "shadows":
+        return this.shadows(val);
       case "saturation":
         return this.saturation(val);
       case "temperature":
@@ -662,6 +666,22 @@ class Init {
     const compProg = this.getCompiledProgram("contrast", fsContrast);
 
     this.gl.uniform1f(compProg.uniform.u_contrast, val);
+
+    this.draw(compProg);
+  }
+
+  highlights(val) {
+    const compProg = this.getCompiledProgram("highlights", fsHighlights);
+
+    this.gl.uniform1f(compProg.uniform.u_highlights, val * 2);
+
+    this.draw(compProg);
+  }
+
+  shadows(val) {
+    const compProg = this.getCompiledProgram("shadows", fsShadows);
+
+    this.gl.uniform1f(compProg.uniform.u_shadows, -val * 2);
 
     this.draw(compProg);
   }
