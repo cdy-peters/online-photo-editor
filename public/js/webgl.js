@@ -333,6 +333,8 @@ class Init {
         return this.blur(val);
       case "vignette":
         return this.vignette(val);
+      case "grain":
+        return this.grain(val);
     }
   }
 
@@ -629,22 +631,10 @@ class Init {
     this.draw(compProg);
   }
 
-  getCompiledProgram(edit) {
-    const fsEdit = {
-      brightness: fsBrightness,
-      exposure: fsExposure,
-      contrast: fsContrast,
-      saturation: fsSaturation,
-      temperature: fsTemperature,
-      tint: fsTint,
-      sharpness: fsSharpness,
-      blur: fsBlur,
-      vignette: fsVignette,
-    };
-
+  getCompiledProgram(edit, fs) {
     var compProg = this.compiledPrograms.get(edit);
     if (!compProg) {
-      compProg = this.compileProgram(null, fsEdit[edit]);
+      compProg = this.compileProgram(null, fs);
       this.compiledPrograms.set(edit, compProg);
     }
 
@@ -653,7 +643,7 @@ class Init {
   }
 
   brightness(val) {
-    const compProg = this.getCompiledProgram("brightness");
+    const compProg = this.getCompiledProgram("brightness", fsBrightness);
 
     this.gl.uniform1f(compProg.uniform.u_brightness, val);
 
@@ -661,7 +651,7 @@ class Init {
   }
 
   exposure(val) {
-    const compProg = this.getCompiledProgram("exposure");
+    const compProg = this.getCompiledProgram("exposure", fsExposure);
 
     this.gl.uniform1f(compProg.uniform.u_exposure, val);
 
@@ -669,7 +659,7 @@ class Init {
   }
 
   contrast(val) {
-    const compProg = this.getCompiledProgram("contrast");
+    const compProg = this.getCompiledProgram("contrast", fsContrast);
 
     this.gl.uniform1f(compProg.uniform.u_contrast, val);
 
@@ -677,7 +667,7 @@ class Init {
   }
 
   saturation(val) {
-    const compProg = this.getCompiledProgram("saturation");
+    const compProg = this.getCompiledProgram("saturation", fsSaturation);
 
     this.gl.uniform1f(compProg.uniform.u_saturation, val);
 
@@ -685,7 +675,7 @@ class Init {
   }
 
   temperature(val) {
-    const compProg = this.getCompiledProgram("temperature");
+    const compProg = this.getCompiledProgram("temperature", fsTemperature);
 
     this.gl.uniform1f(compProg.uniform.u_temperature, val);
 
@@ -693,7 +683,7 @@ class Init {
   }
 
   tint(val) {
-    const compProg = this.getCompiledProgram("tint");
+    const compProg = this.getCompiledProgram("tint", fsTint);
 
     this.gl.uniform1f(compProg.uniform.u_tint, val);
 
@@ -701,7 +691,7 @@ class Init {
   }
 
   sharpness(val) {
-    const compProg = this.getCompiledProgram("sharpness");
+    const compProg = this.getCompiledProgram("sharpness", fsSharpness);
 
     const kernel = new Float32Array([0, -1, 0, -1, 5, -1, 0, -1, 0]);
     this.gl.uniform1fv(compProg.uniform.kernel, kernel);
@@ -711,7 +701,7 @@ class Init {
   }
 
   blur(val) {
-    const compProg = this.getCompiledProgram("blur");
+    const compProg = this.getCompiledProgram("blur", fsBlur);
 
     var x = val / this.canvas.width,
       y = val / this.canvas.height;
@@ -724,9 +714,19 @@ class Init {
   }
 
   vignette(val) {
-    const compProg = this.getCompiledProgram("vignette");
+    const compProg = this.getCompiledProgram("vignette", fsVignette);
 
     this.gl.uniform1f(compProg.uniform.u_vignette, val);
+
+    this.draw(compProg);
+  }
+
+  grain(val) {
+    const compProg = this.getCompiledProgram("grain", fsGrain);
+
+    this.gl.uniform1f(compProg.uniform.u_width, this.width);
+    this.gl.uniform1f(compProg.uniform.u_height, this.height);
+    this.gl.uniform1f(compProg.uniform.u_grain, val);
 
     this.draw(compProg);
   }

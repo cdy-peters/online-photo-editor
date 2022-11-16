@@ -345,3 +345,25 @@ const fsVignette = `
     gl_FragColor = color;
   }
 `;
+
+const fsGrain = `
+  precision highp float;
+
+  uniform sampler2D u_image;
+  uniform float u_width;
+  uniform float u_height;
+  uniform float u_grain;
+
+  varying vec2 v_texCoord;
+
+  float random(vec3 scale, float seed) {
+    return fract(sin(dot(gl_FragCoord.xyz + seed, scale)) * 43758.5453 + seed);
+  }
+
+  void main() {
+    vec4 color = texture2D(u_image, v_texCoord);
+    float grain = random(vec3(12.9898, 78.233, 151.7182), 0.0);
+    color.rgb += grain * u_grain;
+    gl_FragColor = color;
+  }
+`;
